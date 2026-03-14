@@ -10,6 +10,20 @@
 <meta property="og:description" content="17 verified security issues. 3 devices. 308 exfiltration logs. Full responsible disclosure.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://innora.ai/zfb/">
+<meta property="og:image" content="https://innora.ai/zfb/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="article:published_time" content="2026-03-11T00:00:00+08:00">
+<meta property="article:modified_time" content="2026-03-14T16:00:00+08:00">
+<meta property="article:author" content="Innora AI Security Research">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Alipay DeepLink Attack Surface: One Link to Rule Them All">
+<meta name="twitter:description" content="17 verified security issues. CVSS 9.3 whitelist bypass enables remote exploitation by anyone. 6 global investigations active.">
+<meta name="twitter:image" content="https://innora.ai/zfb/og-image.png">
+<meta name="keywords" content="Alipay, security, vulnerability, CVE, DeepLink, JSBridge, whitelist bypass, CVSS 9.3, open redirect, mobile security">
+<link rel="canonical" href="https://innora.ai/zfb/">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔒</text></svg>">
 <style>
 :root {
@@ -358,28 +372,66 @@ footer {
 ul, ol { margin: 12px 0; padding-left: 24px; }
 li { margin: 6px 0; color: var(--text2); }
 
-/* Responsive */
-@media (max-width: 640px) {
-  .hero-stats { gap: 16px; }
-  .hero-stat .num { font-size: 28px; }
-  pre { font-size: 11px; padding: 12px; }
-  table { font-size: 12px; }
-  th, td { padding: 6px 8px; }
-}
-
 /* Bilingual */
 .zh { display: block; }
 .en { display: none; }
 body.lang-en .zh { display: none; }
 body.lang-en .en { display: block; }
 
+/* Responsive */
+@media (max-width: 768px) {
+  .hero { padding: 48px 16px 36px; }
+  .hero h1 { font-size: 24px; }
+  .hero .subtitle { font-size: 14px; }
+  .hero-stats { gap: 16px; }
+  .hero-stat .num { font-size: 28px; }
+  section { padding: 24px 16px; }
+  .card { padding: 16px; }
+  .toc { padding: 16px; }
+  .toc ol { padding-left: 20px; }
+  table { font-size: 12px; }
+  table td, table th { padding: 6px 8px; }
+  th, td { padding: 6px 8px; }
+  pre { font-size: 11px; padding: 12px; }
+  .evidence-box pre, .evidence-box code { font-size: 10px; overflow-x: auto; }
+  .timeline-item { padding-left: 16px; }
+  .lang-toggle { top: 8px; right: 8px; }
+  .lang-toggle button { padding: 4px 10px; font-size: 11px; }
+}
+@media (max-width: 480px) {
+  .hero h1 { font-size: 20px; }
+  section h2 { font-size: 20px; }
+  .num { font-size: 14px; }
+}
+
 /* Print */
 @media print {
-  body { background: #fff; color: #000; }
-  .lang-toggle { display: none; }
+  body { background: #fff; color: #000; font-size: 12pt; }
+  .lang-toggle, .hero-badge, footer { display: none; }
   .hero { background: none; }
+  a { color: #000; text-decoration: underline; }
+  a[href]::after { content: " (" attr(href) ")"; font-size: 9pt; }
+  section { break-inside: avoid; page-break-inside: avoid; }
+  .card { border: 1px solid #ccc; background: #f9f9f9; }
+  .evidence-box { background: #f0f0f0; border: 1px solid #999; }
+  pre, code { background: #eee; color: #000; }
 }
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Alipay DeepLink Attack Surface Analysis — 17 Verified Vulnerabilities",
+  "description": "Independent security research uncovering CVSS 9.3 whitelist bypass enabling remote exploitation of 17 vulnerabilities in Alipay.",
+  "datePublished": "2026-03-11",
+  "dateModified": "2026-03-14",
+  "author": {"@type": "Organization", "name": "Innora AI Security Research", "url": "https://innora.ai"},
+  "publisher": {"@type": "Organization", "name": "Innora AI Security Research"},
+  "url": "https://innora.ai/zfb/",
+  "mainEntityOfPage": "https://innora.ai/zfb/",
+  "keywords": ["Alipay", "security vulnerability", "CVE", "DeepLink", "JSBridge", "whitelist bypass"]
+}
+</script>
 </head>
 <body>
 
@@ -668,6 +720,12 @@ body.lang-en .en { display: block; }
     </a></li>
     <li><a href="#recommendations">
       <span class="zh">修复建议</span><span class="en">Remediation Recommendations</span>
+    </a></li>
+    <li><a href="#global-response">
+      <span class="zh">全球监管机构响应</span><span class="en">Global Regulatory Response</span>
+    </a></li>
+    <li><a href="#legal-response">
+      <span class="zh">法律回应</span><span class="en">Legal Response</span>
     </a></li>
   </ol>
 </div>
@@ -1798,7 +1856,7 @@ Language/zh-Hant Region/CN</code></pre>
 
 <!-- ==================== 9.5 GLOBAL REGULATORY RESPONSE ==================== -->
 <section id="global-response">
-  <h2><span class="num">09½</span>
+  <h2><span class="num">10</span>
     <span class="zh">全球监管机构响应</span>
     <span class="en">Global Regulatory Response</span>
   </h2>
@@ -2307,7 +2365,7 @@ Language/zh-Hant Region/CN</code></pre>
   <p>feng@innora.ai | <a href="https://innora.ai">innora.ai</a></p>
   <p style="margin-top: 12px; font-size: 11px; color: #555;">
     <span class="zh">本文发布于 2026-03-11。如蚂蚁集团在此之后修复了上述问题，我们将更新本文予以说明。</span>
-    <span class="en">Published 2026-03-11. If Ant Group addresses the above issues after this date, we will update this article accordingly.</span>
+    <span class="en">Published 2026-03-11. Last updated: 2026-03-14. If Ant Group addresses the above issues after this date, we will update this article accordingly.</span>
   </p>
 </footer>
 
