@@ -1,0 +1,138 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>208项API监控，代码可被远程修改：我把支付宝举报给了国家</title><meta name="description" content="向中国网信办正式举报支付宝隐私违规 — 举报全文与全球监管进展"><style>body{margin:0;padding:20px;background:#fff;}</style></head><body>
+<!-- Alipay Regulatory Complaint v2 | WeChat Public | 2026-03-18 | Opus+Gemini 30R Optimized --><section style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.75; color: #2c3e50; text-align: justify; letter-spacing: 0.5px; padding: 0 6px"><h1 style="font-size: 22px; font-weight: bold; color: #1a252f; margin: 30px 0 15px; border-bottom: 2px solid #00d4aa; padding-bottom: 10px; line-height: 1.4; background: linear-gradient(90deg, rgba(0,212,170,0.1) 0%, transparent 100%); padding: 10px 0 10px 12px">208项API监控，代码可被远程修改：我把支付宝举报给了国家</h1>
+
+<p style="margin: 20px 0; line-height: 1.75; text-indent: 0; font-size: 15px; font-weight: bold; color: #E06C75; border: 1px solid #E06C75; border-radius: 6px; padding: 15px 20px; background: rgba(224,108,117,0.05)">本文永久地址：https://innora.ai/zfb/regulatory-complaint.html<br/>如果本文再次消失，你知道去哪里找到它。</p>
+
+<p style="margin: 16px 0; line-height: 1.75; text-indent: 0">如果你正在使用支付宝，这篇文章关乎你的每一次支付、每一次聊天，甚至每一次复制粘贴。</p>
+
+<p style="margin: 16px 0; line-height: 1.75; text-indent: 0">你是否想过，你在手机上的截图、复制的内容、连接的蓝牙设备，乃至通话状态，可能正被某个APP默默记录并上传？</p>
+
+<p style="margin: 16px 0; line-height: 1.75; text-indent: 0">这不是科幻电影。这是我在过去一个月对支付宝进行完整逆向工程后，<strong style="font-weight: bold; color: #E06C75">从代码中直接提取的事实</strong>。</p>
+
+<p style="margin: 16px 0; line-height: 1.75; text-indent: 0">2026年3月18日，我以<strong style="font-weight: bold; color: #00d4aa">中华人民共和国公民</strong>身份，依据《个人信息保护法》第七十条，向<strong style="font-weight: bold; color: #00d4aa">中央网信办</strong>正式提交了举报。这不是冲动——这是在负责任披露被拒、技术文章被删、PoC被服务器封堵之后，一个中国公民依法行使权利的选择。</p>
+
+<hr style="border: none; border-top: 1px solid #e8e8e8; margin: 30px 0"/>
+
+<h2 style="font-size: 20px; font-weight: bold; color: #1a252f; margin: 25px 0 12px; padding-left: 12px; border-left: 4px solid #00d4aa; line-height: 1.4">01 你的支付宝，是一栋可以被远程改造的房子</h2>
+
+<p style="margin: 16px 0; line-height: 1.75; text-indent: 0">这可能是最颠覆认知的一点。</p>
+
+<p style="margin: 16px 0; line-height: 1.75; text-indent: 0">支付宝使用一种叫<strong style="font-weight: bold; color: #00d4aa">"PatchProxy"</strong>的技术。打个比方：<strong style="font-weight: bold; color: #E06C75">开发商把精装修的房子交给你后，自己保留了一把万能钥匙。这把钥匙不仅能随时开你的门，还能在你不知情的情况下，把你家的锁给换掉。</strong></p>
+
+<p style="margin: 16px 0; line-height: 1.75; text-indent: 0">技术细节：支付宝每个安全关键方法（权限检查、支付验证、签名校验）中都有一个<code style="font-family: 'Fira Code', Consolas, Monaco, 'Courier New', monospace; font-size: 14px; background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 4px; margin: 0 2px">ChangeQuickRedirect</code>字段。蚂蚁集团的服务器可以通过它——<strong style="font-weight: bold; color: #E06C75">不经过应用商店审核、不发布新版本、不通知用户</strong>——远程替换这些方法的执行逻辑。</p>
+
+<p style="margin: 16px 0; line-height: 1.75; text-indent: 0">你以为你在用A版本，实际上它可能已经被秘密升级到了B版本。</p>
+
+<p style="margin: 16px 0; line-height: 1.75; text-indent: 0">《个人信息保护法》第十四条："处理目的、处理方式等发生变更的，<strong style="font-weight: bold; color: #E06C75">应当重新取得个人同意</strong>。"</p>
+
+<hr style="border: none; border-top: 1px solid #e8e8e8; margin: 30px 0"/>
+
+<h2 style="font-size: 20px; font-weight: bold; color: #1a252f; margin: 25px 0 12px; padding-left: 12px; border-left: 4px solid #00d4aa; line-height: 1.4">02 22项行为监控：你的"手机秘密"可能只是"公开日记"</h2>
+
+<p style="margin: 16px 0; line-height: 1.75; text-indent: 0">支付宝在启动后激活一个"贴身观察员"，记录你的操作并批量上传服务器。它在观察什么？</p>
+
+<div style="background: #f7f9fc; border-radius: 8px; padding: 20px; margin: 25px 0; border: 1px solid #e8e8e8">
+<table style="width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px">
+<tbody>
+<tr><td style="padding: 10px 12px; border: 1px solid #e8e8e8; text-align: center; color: #E06C75; font-weight: bold; width: 60px">6</td><td style="padding: 10px 12px; border: 1px solid #e8e8e8; color: #E06C75; font-weight: bold">你截屏了</td></tr>
+<tr style="background: #f0f0f0"><td style="padding: 10px 12px; border: 1px solid #e8e8e8; text-align: center; color: #E06C75; font-weight: bold">7</td><td style="padding: 10px 12px; border: 1px solid #e8e8e8; color: #E06C75; font-weight: bold">你开始录屏了</td></tr>
+<tr><td style="padding: 10px 12px; border: 1px solid #e8e8e8; text-align: center; color: #E06C75; font-weight: bold">11</td><td style="padding: 10px 12px; border: 1px solid #e8e8e8; color: #E06C75; font-weight: bold">你正在打电话 / 挂断了电话</td></tr>
+<tr style="background: #f0f0f0"><td style="padding: 10px 12px; border: 1px solid #e8e8e8; text-align: center; color: #E06C75; font-weight: bold">13</td><td style="padding: 10px 12px; border: 1px solid #e8e8e8; color: #E06C75; font-weight: bold">你刚刚复制了内容到剪贴板</td></tr>
+<tr><td style="padding: 10px 12px; border: 1px solid #e8e8e8; text-align: center">8-10</td><td style="padding: 10px 12px; border: 1px solid #e8e8e8">你连接或断开了蓝牙设备</td></tr>
+<tr style="background: #f0f0f0"><td style="padding: 10px 12px; border: 1px solid #e8e8e8; text-align: center">0-1</td><td style="padding: 10px 12px; border: 1px solid #e8e8e8">你什么时候看手机、什么时候锁屏</td></tr>
+<tr><td style="padding: 10px 12px; border: 1px solid #e8e8e8; text-align: center">15-21</td><td style="padding: 10px 12px; border: 1px solid #e8e8e8">你在哪个页面、停留了多久</td></tr>
+</tbody>
+</table>
+<p style="margin: 8px 0; font-size: 13px; color: #999; text-align: center">共22项事件，每10条批量上报服务器</p>
+</div>
+
+<p style="margin: 16px 0; line-height: 1.75; text-indent: 0">更令人不安的是：代码里预留了一个<strong style="font-weight: bold; color: #E06C75">远程开关</strong>（<code style="font-family: 'Fira Code', Consolas, Monaco, 'Courier New', monospace; font-size: 14px; background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 4px; margin: 0 2px">OrangeConfig, key:132</code>），服务器随时可以决定开启或关闭这些监控。你无法知晓，也无法拒绝。</p>
+
+<p style="margin: 16px 0; line-height: 1.75; text-indent: 0">《个保法》第十七条要求"处理的个人信息种类"需"真实、准确、完整"告知。这些监控是否在隐私政策中逐项告知了你？</p>
+
+<hr style="border: none; border-top: 1px solid #e8e8e8; margin: 30px 0"/>
+
+<h2 style="font-size: 20px; font-weight: bold; color: #1a252f; margin: 25px 0 12px; padding-left: 12px; border-left: 4px solid #00d4aa; line-height: 1.4">03 208项API拦截：远超支付所需的"监控天网"</h2>
+
+<p style="margin: 16px 0; line-height: 1.75; text-indent: 0">支付宝通过内置的<strong style="font-weight: bold; color: #00d4aa">DexAOP</strong>框架（976个代理类），系统性拦截了<strong style="font-weight: bold; color: #E06C75">208类</strong>系统API调用——据行业安全研究估计，主流支付APP的拦截范围约30-50类。支付宝是行业参考水平的<strong style="font-weight: bold; color: #E06C75">4-6倍</strong>。</p>
+
+<div style="background: #f7f9fc; border-radius: 8px; padding: 20px; margin: 25px 0; border: 1px solid #e8e8e8">
+<table style="width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px">
+<thead><tr style="background: #1a1a2e; color: #a8b2d1"><th style="padding: 10px 12px; text-align: left; border: 1px solid #333">类别</th><th style="padding: 10px 12px; text-align: center; border: 1px solid #333">数量</th><th style="padding: 10px 12px; text-align: center; border: 1px solid #333">支付必须？</th></tr></thead>
+<tbody>
+<tr><td style="padding: 8px 12px; border: 1px solid #e8e8e8">蓝牙</td><td style="padding: 8px 12px; text-align: center; border: 1px solid #e8e8e8; color: #E06C75; font-weight: bold">17</td><td style="padding: 8px 12px; text-align: center; border: 1px solid #e8e8e8">否</td></tr>
+<tr style="background: #f0f0f0"><td style="padding: 8px 12px; border: 1px solid #e8e8e8">电话/通信</td><td style="padding: 8px 12px; text-align: center; border: 1px solid #e8e8e8; color: #E06C75; font-weight: bold">17</td><td style="padding: 8px 12px; text-align: center; border: 1px solid #e8e8e8">否</td></tr>
+<tr><td style="padding: 8px 12px; border: 1px solid #e8e8e8">通讯录</td><td style="padding: 8px 12px; text-align: center; border: 1px solid #e8e8e8; color: #E06C75; font-weight: bold">12</td><td style="padding: 8px 12px; text-align: center; border: 1px solid #e8e8e8">否</td></tr>
+<tr style="background: #f0f0f0"><td style="padding: 8px 12px; border: 1px solid #e8e8e8">录音/摄像头/剪贴板</td><td style="padding: 8px 12px; text-align: center; border: 1px solid #e8e8e8; color: #E06C75; font-weight: bold">18</td><td style="padding: 8px 12px; text-align: center; border: 1px solid #e8e8e8">仅扫码需基础权限</td></tr>
+<tr><td style="padding: 8px 12px; border: 1px solid #e8e8e8">加密操作</td><td style="padding: 8px 12px; text-align: center; border: 1px solid #e8e8e8">3</td><td style="padding: 8px 12px; text-align: center; border: 1px solid #e8e8e8">动机可疑</td></tr>
+<tr style="background: #f0f0f0"><td style="padding: 8px 12px; border: 1px solid #e8e8e8">GPS/WiFi/传感器/NFC等</td><td style="padding: 8px 12px; text-align: center; border: 1px solid #e8e8e8">141</td><td style="padding: 8px 12px; text-align: center; border: 1px solid #e8e8e8">大部分非必须</td></tr>
+<tr><td style="padding: 8px 12px; border: 1px solid #e8e8e8; font-weight: bold">合计</td><td style="padding: 8px 12px; text-align: center; border: 1px solid #e8e8e8; color: #E06C75; font-weight: bold; font-size: 16px">208</td><td style="padding: 8px 12px; text-align: center; border: 1px solid #e8e8e8"></td></tr>
+</tbody>
+</table>
+</div>
+
+<p style="margin: 16px 0; line-height: 1.75; text-indent: 0">《个人信息保护法》第六条："收集个人信息应当限于实现处理目的的<strong style="font-weight: bold; color: #00d4aa">最小范围</strong>。"为实现支付功能，真的需要208项拦截吗？</p>
+
+<hr style="border: none; border-top: 1px solid #e8e8e8; margin: 30px 0"/>
+
+<h2 style="font-size: 20px; font-weight: bold; color: #1a252f; margin: 25px 0 12px; padding-left: 12px; border-left: 4px solid #00d4aa; line-height: 1.4">04 97%内部接口"裸奔"，包括数字人民币钱包</h2>
+
+<p style="margin: 16px 0; line-height: 1.75; text-indent: 0">扫描全部408个内部接口，<strong style="font-weight: bold; color: #E06C75">396个（97.1%）的权限检查形同虚设</strong>。</p>
+
+<p style="margin: 16px 0; line-height: 1.75; text-indent: 0">"裸奔"的接口包括：<strong style="font-weight: bold; color: #E06C75">6个支付类</strong>（含数字人民币钱包）、<strong style="font-weight: bold; color: #E06C75">5个认证类</strong>（登录、身份验证）、<strong style="font-weight: bold; color: #E06C75">3个NFC类</strong>（非接触式支付）、<strong style="font-weight: bold; color: #E06C75">6个文件操作类</strong>。</p>
+
+<p style="margin: 16px 0; line-height: 1.75; text-indent: 0">数字人民币是中国人民银行发行的法定数字货币。其钱包接口在支付宝APP内缺乏应有的安全保护——这不仅是隐私问题，更是<strong style="font-weight: bold">严肃的金融安全隐患</strong>。</p>
+
+<hr style="border: none; border-top: 1px solid #e8e8e8; margin: 30px 0"/>
+
+<h2 style="font-size: 20px; font-weight: bold; color: #1a252f; margin: 25px 0 12px; padding-left: 12px; border-left: 4px solid #00d4aa; line-height: 1.4">05 举报与全球同步</h2>
+
+<p style="margin: 16px 0; line-height: 1.75; text-indent: 0">基于以上事实，举报邮件已提交至以下机构：</p>
+
+<div style="background: #f7f9fc; border-radius: 8px; padding: 20px; margin: 25px 0; border: 1px solid #e8e8e8">
+<p style="margin: 8px 0; font-weight: bold; color: #E06C75; font-size: 16px">中国境内</p>
+<p style="margin: 6px 0; font-size: 14px">中央网信办APP治理专线 · 12321举报中心 · 网信办数据安全 · 北京/广东/深圳/江苏/浙江(属地)网信办 — <strong style="color: #00d4aa">共8封</strong></p>
+<hr style="border: none; border-top: 1px solid #e8e8e8; margin: 12px 0"/>
+<p style="margin: 8px 0; font-weight: bold; color: #00d4aa; font-size: 16px">全球监管</p>
+<p style="margin: 6px 0; font-size: 14px">新加坡PDPC(已立案) · 卢森堡CSSF([Case Ref Redacted]) · 香港金管局 · Apple安全团队 · 英国FCA · 欧盟EDPB + 5个欧盟DPA · 4个金融监管 · 4个CERT — <strong style="color: #00d4aa">共20封</strong></p>
+<hr style="border: none; border-top: 1px solid #e8e8e8; margin: 12px 0"/>
+<p style="margin: 6px 0; font-size: 14px; color: #999">9个CVE已提交国际漏洞数据库 · Packet Storm Advisory #217089已发布 · 38个国家和地区的机构已回应</p>
+</div>
+
+<hr style="border: none; border-top: 1px solid #e8e8e8; margin: 30px 0"/>
+
+<h2 style="font-size: 20px; font-weight: bold; color: #1a252f; margin: 25px 0 12px; padding-left: 12px; border-left: 4px solid #00d4aa; line-height: 1.4">为什么必须公开</h2>
+
+<p style="margin: 16px 0; line-height: 1.75; text-indent: 0">从2月16日开始分析到3月18日正式举报，这一个月经历了：负责任披露被拒("正常功能") → 发布4小时后收到律师函 → 4篇微信文章被全部删除 → PoC被服务器端封堵。</p>
+
+<p style="margin: 16px 0; line-height: 1.75; text-indent: 0">技术分析的结论，不会因为删帖和律师函而改变。</p>
+
+<p style="margin: 16px 0; line-height: 1.75; text-indent: 0"><strong style="font-weight: bold; color: #00d4aa">公开，是为了透明。</strong>将举报内容公之于众，是确保它不会被无声压下的最佳方式。<strong style="font-weight: bold; color: #00d4aa">公开，更是为了行使权利。</strong>《个人信息保护法》赋予了每个公民举报的权利。行使这项权利，光明正大，无需道歉。</p>
+
+<hr style="border: none; border-top: 1px solid #e8e8e8; margin: 30px 0"/>
+
+<div style="background: linear-gradient(135deg, #f0fff9, #e6fff7); border-radius: 8px; padding: 20px; margin: 30px 0; border: 1px solid #91d5c8">
+<p style="margin: 8px 0; font-weight: bold; color: #1a252f; font-size: 16px">你可以做什么？</p>
+<p style="margin: 10px 0; line-height: 1.75; color: #2c3e50"><strong style="color: #00d4aa">1. 夺回你手机的控制权</strong>：立即检查「设置」→「隐私」→「权限管理」，审视支付宝的每一项权限，关闭所有你认为非必要的授权。</p>
+<p style="margin: 10px 0; line-height: 1.75; color: #2c3e50"><strong style="color: #00d4aa">2. 让更多人看见</strong>：如果你认为10亿用户有权知道自己的隐私是如何被对待的，请将本文分享出去。你的每一次转发，都是在为个人信息安全投票。</p>
+<p style="margin: 10px 0; line-height: 1.75; color: #2c3e50"><strong style="color: #00d4aa">3. 关注后续</strong>：关注公众号 <strong>AI-security-innora</strong>，我们将持续跟进监管反馈。</p>
+</div>
+
+<blockquote style="margin: 20px 0; padding: 15px 20px; background: #f0f9ff; border-left: 4px solid #00d4aa; color: #666666; font-size: 14px; line-height: 1.6; border-radius: 0 4px 4px 0">
+<p style="margin: 8px 0"><strong style="color: #00d4aa">完整技术报告</strong>：https://innora.ai/zfb/privacy-analysis.html</p>
+<p style="margin: 8px 0"><strong style="color: #00d4aa">全部分析代码</strong>：https://github.com/sgInnora/alipay-securityguard-analysis</p>
+</blockquote>
+
+<div style="background: #f7f9fc; border-radius: 8px; padding: 20px; margin: 30px 0; border: 1px solid #e8e8e8">
+<p style="margin: 8px 0; font-weight: bold; color: #1a252f; font-size: 16px">关于作者</p>
+<p style="margin: 8px 0; line-height: 1.75"><strong>冯继强</strong>，中国公民，安全研究人员</p>
+<p style="margin: 8px 0; line-height: 1.75">联系：feng@innora.ai</p>
+</div>
+
+<section style="font-size: 14px; color: #888888; border-top: 1px solid #e8e8e8; padding-top: 15px; margin-top: 40px">
+<p style="margin: 6px 0; font-size: 12px; color: #999; font-style: italic">免责声明：本文内容为作者基于公开可得的APK文件进行技术分析后的摘要，以及据此向国家监管机构提交的举报信内容。所有关于"涉嫌违规"的定性，最终解释权和判断权归国家权威部门所有。</p>
+<p style="margin: 10px 0; font-size: 13px; color: #666; font-weight: bold">本文永久地址：https://innora.ai/zfb/regulatory-complaint.html</p>
+</section>
+
+</section>
+</body></html>

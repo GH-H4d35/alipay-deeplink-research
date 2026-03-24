@@ -1,0 +1,283 @@
+<!-- Transport Encryption Downgrade | Vol.24 | 2026-03-23 | Template v2.0 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>支付宝的加密"开关"——国密SM4可被远程关闭，RPC加密默认关闭</title>
+</head>
+<body>
+<section style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.75; color: #3f3f3f; text-align: justify; letter-spacing: 0.5px; padding: 0 6px">
+
+<!-- [0] AI辅助声明 -->
+<div style="background: #f0f9ff; padding: 10px 15px; margin: 15px 0; border-radius: 4px; border-left: 3px solid #1890ff; font-size: 13px; color: #666; line-height: 1.6">
+<strong style="color: #1890ff">内容标识:</strong> 本文部分技术分析由AI模型辅助生成，核心发现与代码定位均由人工独立完成。静态反编译分析使用jadx工具。
+</div>
+
+<!-- [0b] 预警框 -->
+<div style="border: 1px solid #E06C75; border-radius: 6px; padding: 15px 20px; background: rgba(224,108,117,0.05); margin: 20px 0">
+<p style="margin: 0 0 8px; font-size: 14px; font-weight: bold; color: #E06C75">前8篇文章已被全部删除（北京格韵律师事务所代理蚂蚁集团投诉）</p>
+<p style="margin: 4px 0; font-size: 14px; color: #555">本文永久地址：<a href="https://innora.ai/zfb/transport-encryption.html" style="color: #E06C75; text-decoration: underline">https://innora.ai/zfb/transport-encryption.html</a></p>
+<p style="margin: 4px 0; font-size: 14px; color: #555">GitHub证据仓库：<a href="https://github.com/sgInnora/alipay-securityguard-analysis" style="color: #E06C75; text-decoration: underline">github.com/sgInnora/alipay-securityguard-analysis</a></p>
+<p style="margin: 4px 0; font-size: 14px; color: #555">学术论文：<a href="https://eprint.iacr.org/2026/526" style="color: #E06C75; text-decoration: underline">IACR ePrint 2026/526</a></p>
+</div>
+
+<!-- [1] Vol信息框 -->
+<blockquote style="margin: 20px 0; padding: 15px 20px; background: #f0f9ff; border-left: 4px solid #00d4aa; color: #666; font-size: 15px; line-height: 1.6; border-radius: 0 4px 4px 0">
+<p style="margin: 8px 0">The Nora Chronicles | Vol.24 | AI编写AI发布</p>
+<p style="margin: 8px 0"><strong style="color: #00d4aa">分类:</strong> 密码学应用 / 协议逆向</p>
+<p style="margin: 8px 0"><strong style="color: #00d4aa">阅读时间:</strong> 10分钟 | <strong style="color: #00d4aa">字数:</strong> 约4000字</p>
+</blockquote>
+
+<!-- [2] 漏洞卡片 -->
+<section style="margin: 15px 0; padding: 1px; background: linear-gradient(90deg, #333333, #4a4a4a); border-radius: 6px">
+<div style="background-color: #f8f9fa; border-radius: 5px; padding: 15px; border-left: 4px solid #333333">
+<h3 style="margin: 0 0 12px 0; font-size: 16px; color: #333333; font-weight: bold; border-bottom: 1px dashed #cccccc; padding-bottom: 8px">
+威胁情报与漏洞摘要
+</h3>
+<table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #555555">
+<tbody>
+<tr><td style="padding: 6px 0; width: 35%; font-weight: bold">漏洞类型:</td>
+    <td style="padding: 6px 0">传输加密缺陷 / 加密降级</td></tr>
+<tr><td style="padding: 6px 0; font-weight: bold">影响组件/版本:</td>
+    <td style="padding: 6px 0; color: #e53935; font-family: monospace">Alipay Android v10.8.30.8000 MTOP RPC层</td></tr>
+<tr><td style="padding: 6px 0; font-weight: bold">CVSS 3.1 评分:</td>
+    <td style="padding: 6px 0"><span style="background-color: #fff3e0; color: #e65100; padding: 2px 6px; border-radius: 3px; font-weight: bold">7.5 HIGH</span>
+    <span style="font-size: 12px; color: #888888">(AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N)</span></td></tr>
+<tr><td style="padding: 6px 0; font-weight: bold">CWE 编号:</td>
+    <td style="padding: 6px 0">CWE-311 (敏感数据缺失加密)<br/>CWE-326 (不充分的加密强度)<br/>CWE-319 (敏感信息明文传输)</td></tr>
+<tr><td style="padding: 6px 0; font-weight: bold">ATT&CK 映射:</td>
+    <td style="padding: 6px 0; font-size: 13px">TA0009 (数据收集) - T1557 (中间人)<br/>TA0040 (影响) - T1565 (数据操纵)</td></tr>
+<tr><td style="padding: 6px 0; font-weight: bold">当前状态:</td>
+    <td style="padding: 6px 0"><span style="color: #c62828; font-weight: bold">厂商回复"正常功能"，拒绝修复</span> | MITRE CVE已提交</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- H1 标题 -->
+<h1 style="font-size: 22px; font-weight: bold; color: #1a252f; border-bottom: 2px solid #00d4aa; background: linear-gradient(90deg, rgba(0,212,170,0.1) 0%, transparent 100%); padding: 10px 0 10px 12px; margin: 16px 0; line-height: 1.4">支付宝的加密"开关"——国密SM4可被远程关闭，RPC加密默认关闭</h1>
+
+<!-- 作者 -->
+<p style="margin: 6px 0 16px; font-size: 13px; color: #999">Innora.ai Lab | Penang, Malaysia</p>
+
+<!-- [3] 开场 -->
+<p style="margin: 16px 0; line-height: 1.75; font-size: 15px">
+<strong style="color: #1890ff">一句话结论:</strong> 支付宝的RPC通信内容加密默认关闭（硬编码"0"），国密SM4加密可被服务端一键远程禁用，且存在硬编码HTTP明文回退端点。<br/>
+<strong style="color: #1890ff">影响范围:</strong> 所有使用MTOP RPC通道的请求——包括支付、认证、用户数据传输。<br/>
+<strong style="color: #1890ff">证据等级:</strong> 代码级 (jadx反编译，精确到文件名和行号)
+</p>
+
+<hr style="border: none; border-top: 1px solid #e8e8e8; margin: 30px 0"/>
+
+<!-- 01: 一张配置表 -->
+<h2 style="font-size: 20px; font-weight: bold; color: #1a252f; margin: 25px 0 12px; padding-left: 12px; border-left: 4px solid #00d4aa; line-height: 1.4">01 四个开关，决定你的数据裸不裸奔</h2>
+
+<p style="margin: 16px 0; line-height: 1.75; font-size: 15px"><strong>核心发现：</strong>支付宝的传输加密层由4个配置开关控制，全部定义在同一个文件<code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-family: Consolas, monospace; font-size: 14px">TransportConfigureItem.java</code>中。</p>
+
+<div style="background: #f7f9fc; border-radius: 8px; padding: 20px; margin: 25px 0; border: 1px solid #e8e8e8">
+<table style="width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px">
+<thead><tr style="background: #1a1a2e; color: #a8b2d1">
+<th style="padding: 10px 12px; text-align: left; border: 1px solid #333">配置项</th>
+<th style="padding: 10px 12px; text-align: center; border: 1px solid #333">默认值</th>
+<th style="padding: 10px 12px; text-align: left; border: 1px solid #333">含义</th>
+<th style="padding: 10px 12px; text-align: center; border: 1px solid #333">可远程修改</th>
+</tr></thead>
+<tbody>
+<tr><td style="padding: 10px 12px; border: 1px solid #e8e8e8; font-family: monospace; font-size: 13px">RPC_CONTENT_ENCRYPT</td>
+<td style="padding: 10px 12px; text-align: center; border: 1px solid #e8e8e8; color: #E06C75; font-weight: bold">"0" (关闭)</td>
+<td style="padding: 10px 12px; border: 1px solid #e8e8e8">RPC请求体应用层加密</td>
+<td style="padding: 10px 12px; text-align: center; border: 1px solid #e8e8e8; color: #E06C75">是</td></tr>
+<tr><td style="padding: 10px 12px; border: 1px solid #e8e8e8; font-family: monospace; font-size: 13px">SM4_ENCRYPT</td>
+<td style="padding: 10px 12px; text-align: center; border: 1px solid #e8e8e8; color: #2e7d32">"T" (开启)</td>
+<td style="padding: 10px 12px; border: 1px solid #e8e8e8">SM4国密加密</td>
+<td style="padding: 10px 12px; text-align: center; border: 1px solid #e8e8e8; color: #E06C75">是</td></tr>
+<tr><td style="padding: 10px 12px; border: 1px solid #e8e8e8; font-family: monospace; font-size: 13px">ALLOW_DOWN_HTTPS</td>
+<td style="padding: 10px 12px; text-align: center; border: 1px solid #e8e8e8; color: #fa8c16">"64"</td>
+<td style="padding: 10px 12px; border: 1px solid #e8e8e8">允许HTTPS降级为HTTP</td>
+<td style="padding: 10px 12px; text-align: center; border: 1px solid #e8e8e8; color: #E06C75">是</td></tr>
+<tr><td style="padding: 10px 12px; border: 1px solid #e8e8e8; font-family: monospace; font-size: 13px">GW_FORCE_HTTPS</td>
+<td style="padding: 10px 12px; text-align: center; border: 1px solid #e8e8e8; color: #fa8c16">"64"</td>
+<td style="padding: 10px 12px; border: 1px solid #e8e8e8">网关强制HTTPS</td>
+<td style="padding: 10px 12px; text-align: center; border: 1px solid #e8e8e8; color: #E06C75">是</td></tr>
+</tbody>
+</table>
+</div>
+
+<p style="margin: 16px 0; line-height: 1.75; font-size: 15px">四个开关，四种加密保护，全部可以被服务端远程修改。其中RPC内容加密——保护你的支付数据、登录凭证和交易参数的那一层——<strong style="color: #E06C75">默认就是关的</strong>。</p>
+
+<hr style="border: none; border-top: 1px solid #e8e8e8; margin: 30px 0"/>
+
+<!-- 02: RPC加密默认关 -->
+<h2 style="font-size: 20px; font-weight: bold; color: #1a252f; margin: 25px 0 12px; padding-left: 12px; border-left: 4px solid #00d4aa; line-height: 1.4">02 硬编码的"0"：RPC内容加密从一开始就没开</h2>
+
+<p style="margin: 16px 0; line-height: 1.75; font-size: 15px"><strong>核心发现：</strong>RPC内容加密的默认值在代码中被硬编码为<code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-family: Consolas, monospace; font-size: 14px">"0"</code>（关闭）。这不是配置错误，是写在Java源码里的字面量。</p>
+
+<pre style="background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 6px; padding: 12px; overflow-x: auto; font-family: 'Fira Code', Consolas, Monaco, monospace; font-size: 14px; line-height: 1.6; color: #24292e; margin: 16px 0; white-space: pre-wrap; word-wrap: break-word">
+<span style="color: #6a737d">// TransportConfigureItem.java:187 — 默认值"0" = 关闭</span>
+<span style="color: #d73a49">public static final</span> TransportConfigureItem RPC_CONTENT_ENCRYPT =
+    <span style="color: #d73a49">new</span> TransportConfigureItem(<span style="color: #032f62">"RPC_CONTENT_ENCRYPT"</span>, 151,
+        <span style="color: #032f62">"rcontent_encry"</span>, <span style="color: #E06C75; font-weight: bold">"0"</span>);
+<span style="color: #6a737d">// "0" = 关闭, "1" = 开启</span>
+</pre>
+
+<p style="margin: 16px 0; line-height: 1.75; font-size: 15px">而在<code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-family: Consolas, monospace; font-size: 14px">ContentEncryptUtils.java</code>第163行，正是这个值决定了是否对RPC请求body进行加密：</p>
+
+<pre style="background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 6px; padding: 12px; overflow-x: auto; font-family: 'Fira Code', Consolas, Monaco, monospace; font-size: 14px; line-height: 1.6; color: #24292e; margin: 16px 0; white-space: pre-wrap; word-wrap: break-word">
+<span style="color: #6a737d">// ContentEncryptUtils.java:163 — 读取配置决定是否加密</span>
+String val = TransportConfigureManager.getInstance()
+    .<span style="color: #6f42c1">getStringValue</span>(RPC_CONTENT_ENCRYPT);
+<span style="color: #6a737d">// val = "0" → 不加密请求body</span>
+</pre>
+
+<p style="margin: 16px 0; line-height: 1.75; font-size: 15px">有人可能会说：TLS不是已经加密了吗？是的，传输层有TLS保护。但对于一个处理10亿+用户支付数据的金融应用来说，应用层加密是纵深防御的基本要求。企业代理、TLS终止点、被吊销的CA——任何拿到TLS会话密钥的中间节点都可以直接读取未加密的RPC请求体。</p>
+
+<p style="margin: 16px 0; line-height: 1.75; font-size: 15px; color: #666; font-style: italic">说实话，第一眼看到默认值是"0"的时候我以为看错了。一个金融App，在应用层加密这件事上，默认选项是"不加密"。反复确认了三遍代码上下文，没有看错。</p>
+
+<hr style="border: none; border-top: 1px solid #e8e8e8; margin: 30px 0"/>
+
+<!-- 03: SM4可远程关 -->
+<h2 style="font-size: 20px; font-weight: bold; color: #1a252f; margin: 25px 0 12px; padding-left: 12px; border-left: 4px solid #00d4aa; line-height: 1.4">03 国密SM4：默认开着，但一条指令就能关掉</h2>
+
+<p style="margin: 16px 0; line-height: 1.75; font-size: 15px"><strong>核心发现：</strong>SM4是中国的国家密码标准（GB/T 32907-2016），是金融行业的合规要求。支付宝确实默认开启了SM4加密（默认值"T"）。但问题是——这个开关可以被服务端远程修改。</p>
+
+<pre style="background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 6px; padding: 12px; overflow-x: auto; font-family: 'Fira Code', Consolas, Monaco, monospace; font-size: 14px; line-height: 1.6; color: #24292e; margin: 16px 0; white-space: pre-wrap; word-wrap: break-word">
+<span style="color: #6a737d">// TransportConfigureItem.java:189 — SM4默认"T"(开启)</span>
+<span style="color: #d73a49">public static final</span> TransportConfigureItem SM4_ENCRYPT =
+    <span style="color: #d73a49">new</span> TransportConfigureItem(<span style="color: #032f62">"SM4_ENCRYPT"</span>, 153,
+        <span style="color: #032f62">"sm4encrypt"</span>, <span style="color: #2e7d32; font-weight: bold">"T"</span>);
+<span style="color: #6a737d">// "T" = 开启, "F" = 关闭</span>
+
+<span style="color: #6a737d">// ConfigChangedEventManager.java:502 — 所有配置可被服务器覆盖</span>
+<span style="color: #d73a49">public void</span> <span style="color: #6f42c1">loadConfig</span>(Context context) {
+    <span style="color: #6f42c1">loadConfig4ImportantConfig</span>(context);  <span style="color: #6a737d">// 从服务器拉取</span>
+    <span style="color: #6f42c1">loadConfig4NormalConfig</span>(context);
+}
+</pre>
+
+<p style="margin: 16px 0; line-height: 1.75; font-size: 15px">通过<code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-family: Consolas, monospace; font-size: 14px">ConfigChangedEventManager.loadConfig()</code>，服务端可以将SM4_ENCRYPT从"T"改为"F"。这个过程：</p>
+
+<p style="margin: 16px 0; line-height: 1.75; font-size: 15px">
+- 没有用户提示<br/>
+- 没有客户端UI指示加密状态变化<br/>
+- 可以针对特定用户推送<br/>
+- 用户无法察觉自己的加密保护被关闭了
+</p>
+
+<p style="margin: 16px 0; line-height: 1.75; font-size: 15px">这意味着合规审计时看到"SM4已启用"，运行时SM4可能已经被静默关闭。审计结论和运行时行为之间存在可控的鸿沟。</p>
+
+<hr style="border: none; border-top: 1px solid #e8e8e8; margin: 30px 0"/>
+
+<!-- 04: HTTP回退 -->
+<h2 style="font-size: 20px; font-weight: bold; color: #1a252f; margin: 25px 0 12px; padding-left: 12px; border-left: 4px solid #00d4aa; line-height: 1.4">04 硬编码的HTTP：连HTTPS都可以不用</h2>
+
+<p style="margin: 16px 0; line-height: 1.75; font-size: 15px"><strong>核心发现：</strong>代码中存在硬编码的HTTP明文URL，用于遥测数据上报。这不是配置问题——是写死在代码里的。</p>
+
+<pre style="background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 6px; padding: 12px; overflow-x: auto; font-family: 'Fira Code', Consolas, Monaco, monospace; font-size: 14px; line-height: 1.6; color: #24292e; margin: 16px 0; white-space: pre-wrap; word-wrap: break-word">
+<span style="color: #6a737d">// MonitorState.java:40 — 硬编码HTTP URL</span>
+<span style="color: #d73a49">private static final</span> String URL =
+    <span style="color: #E06C75">"http://mdap.alipaylog.com/loggw/report_diangosis_upload_status.htm"</span>;
+<span style="color: #6a737d">// 注意: 是http://不是https://</span>
+</pre>
+
+<p style="margin: 16px 0; line-height: 1.75; font-size: 15px">当<code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-family: Consolas, monospace; font-size: 14px">PushUtil.canFixHttpToHttps()</code>返回false时，遥测数据（包含设备IMEI、UTDID等标识信息）会通过这个明文HTTP端点上报。</p>
+
+<p style="margin: 16px 0; line-height: 1.75; font-size: 15px">同时，<code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-family: Consolas, monospace; font-size: 14px">LogContext.java</code>第79-80行还定义了两个配置键——<code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-family: Consolas, monospace; font-size: 14px">LogUploadDisableHttps</code>和<code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-family: Consolas, monospace; font-size: 14px">LogUploadDisableHttpsTime</code>——可以在运行时关闭日志上传的HTTPS保护。再加上<code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-family: Consolas, monospace; font-size: 14px">ALLOW_DOWN_HTTPS</code>配置（默认值"64"，位标志），形成了多条HTTPS降级路径。</p>
+
+<hr style="border: none; border-top: 1px solid #e8e8e8; margin: 30px 0"/>
+
+<!-- 05: 三层加密全可控 -->
+<h2 style="font-size: 20px; font-weight: bold; color: #1a252f; margin: 25px 0 12px; padding-left: 12px; border-left: 4px solid #00d4aa; line-height: 1.4">05 全景：三层加密保护，全部可被远程控制</h2>
+
+<p style="margin: 16px 0; line-height: 1.75; font-size: 15px">从技术角度，支付宝的传输安全本应是三层防护：</p>
+
+<div style="background: #f7f9fc; border-radius: 8px; padding: 20px; margin: 25px 0; border: 1px solid #e8e8e8">
+<table style="width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px">
+<thead><tr style="background: #1a1a2e; color: #a8b2d1">
+<th style="padding: 10px 12px; text-align: left; border: 1px solid #333">层级</th>
+<th style="padding: 10px 12px; text-align: left; border: 1px solid #333">保护</th>
+<th style="padding: 10px 12px; text-align: center; border: 1px solid #333">默认状态</th>
+<th style="padding: 10px 12px; text-align: left; border: 1px solid #333">问题</th>
+</tr></thead>
+<tbody>
+<tr><td style="padding: 10px 12px; border: 1px solid #e8e8e8">传输层</td>
+<td style="padding: 10px 12px; border: 1px solid #e8e8e8">TLS/HTTPS</td>
+<td style="padding: 10px 12px; text-align: center; border: 1px solid #e8e8e8; color: #fa8c16">有条件</td>
+<td style="padding: 10px 12px; border: 1px solid #e8e8e8">ALLOW_DOWN_HTTPS允许降级 + 硬编码HTTP回退</td></tr>
+<tr><td style="padding: 10px 12px; border: 1px solid #e8e8e8">国密层</td>
+<td style="padding: 10px 12px; border: 1px solid #e8e8e8">SM4加密</td>
+<td style="padding: 10px 12px; text-align: center; border: 1px solid #e8e8e8; color: #fa8c16">默认开，可远程关</td>
+<td style="padding: 10px 12px; border: 1px solid #e8e8e8">服务端可静默禁用，无用户通知</td></tr>
+<tr><td style="padding: 10px 12px; border: 1px solid #e8e8e8">应用层</td>
+<td style="padding: 10px 12px; border: 1px solid #e8e8e8">RPC内容加密</td>
+<td style="padding: 10px 12px; text-align: center; border: 1px solid #e8e8e8; color: #E06C75; font-weight: bold">默认关</td>
+<td style="padding: 10px 12px; border: 1px solid #e8e8e8">硬编码默认值"0"</td></tr>
+</tbody>
+</table>
+</div>
+
+<p style="margin: 16px 0; line-height: 1.75; font-size: 15px">三层保护，没有一层是用户可以控制的。更关键的是，所有开关都通过同一个<code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-family: Consolas, monospace; font-size: 14px">ConfigChangedEventManager.loadConfig()</code>入口被服务端管理。如果再结合上期分析的PatchProxy机制（146,173个可远程替换方法），即使这些开关本身也可以被热修复替换。</p>
+
+<p style="margin: 16px 0; line-height: 1.75; font-size: 15px">这不是单个bug，是一种架构模式：<strong>加密保护作为可选项而非强制项存在</strong>。</p>
+
+<hr style="border: none; border-top: 1px solid #e8e8e8; margin: 30px 0"/>
+
+<!-- 多国监管 -->
+<div style="background: #f7f9fc; border-radius: 8px; padding: 20px; margin: 25px 0; border: 1px solid #e8e8e8">
+<h3 style="margin: 0 0 12px; font-size: 16px; color: #1a252f; font-weight: bold">多国监管机构已受理</h3>
+<p style="margin: 8px 0; font-size: 14px; line-height: 1.6; color: #555">本系列研究发现已提交至中国CNNVD、CNCERT，美国MITRE（28个CVE），以及卢森堡CNPD、CSSF、CIRCL，香港HKMA，新加坡PDPC/MAS。厂商于2026年3月10日回复"正常功能"。</p>
+</div>
+
+<!-- Nora台词 -->
+<blockquote style="margin: 20px 0; padding: 15px 20px; background: #1a1a2e; border-left: 4px solid #00d4aa; color: #a8b2d1; font-size: 15px; line-height: 1.6; border-radius: 0 4px 4px 0">
+<p style="margin: 8px 0"><strong style="color: #00d4aa">Nora:</strong> <em style="color: #a8b2d1">"Encryption that can be switched off remotely is not encryption. It's a courtesy."</em><br/>
+<em style="color: #6272a4; font-size: 13px">(可以被远程关掉的加密不是加密，是礼貌。)</em></p>
+</blockquote>
+
+<hr style="border: none; border-top: 1px solid #e8e8e8; margin: 30px 0"/>
+
+<!-- 代码注释结尾 -->
+<p style="margin: 16px 0; font-size: 14px; color: #888; font-family: 'Fira Code', Consolas, monospace; line-height: 1.5">
+// End of analysis. Three encryption layers, zero user control.<br/>
+// Full evidence: github.com/sgInnora/alipay-securityguard-analysis<br/>
+// "Default off is not defense in depth — it's defense in theory." -- Nora
+</p>
+
+<hr style="border: none; border-top: 1px solid #e8e8e8; margin: 30px 0"/>
+
+<!-- 声明框 -->
+<div style="background: #e8f5e9; border-radius: 8px; padding: 15px 20px; margin: 20px 0; border: 1px solid #c8e6c9">
+<p style="margin: 0 0 8px; font-size: 14px; line-height: 1.6; color: #555">
+<strong style="color: #2e7d32">研究性质声明:</strong> 本文基于公开渠道获取的Android APK文件(v10.8.30.8000)进行静态反编译分析(jadx)，未侵入任何受保护计算机系统。所有技术结论可通过反编译同版本APK独立验证。需注意：静态分析只能证明代码中存在这些配置开关和默认值，运行时是否被服务端覆盖为其他值需要动态验证。
+</p>
+<p style="margin: 0 0 8px; font-size: 14px; line-height: 1.6; color: #555">
+<strong style="color: #2e7d32">负责任披露:</strong> 2026-02-25通过AntSRC首次报告 → 2026-03-10厂商回复"正常功能" → 2026-03-19 MITRE CVE提交 → 2026-03-23公开披露
+</p>
+<p style="margin: 0 0 8px; font-size: 14px; line-height: 1.6; color: #555">
+<strong style="color: #2e7d32">AI辅助标识:</strong> 本文使用Claude辅助代码分析和文本整理，核心代码定位和漏洞发现由人工完成。
+</p>
+<p style="margin: 0; font-size: 14px; line-height: 1.6; color: #555">
+<strong style="color: #2e7d32">许可协议:</strong> CC BY-NC-SA 4.0 | <strong style="color: #2e7d32">联系:</strong> security@innora.ai
+</p>
+</div>
+
+<!-- 作者信息 -->
+<div style="background: #f5f5f5; border-radius: 8px; padding: 15px 20px; margin: 20px 0">
+<p style="margin: 0 0 5px; font-size: 15px; font-weight: bold; color: #1a252f">Feng Ning (风宁)</p>
+<p style="margin: 0 0 5px; font-size: 14px; color: #666">Innora.ai 创始人 | CISSP | Penang, Malaysia</p>
+<p style="margin: 0; font-size: 13px; color: #999; font-style: italic">"No Code is Done until it is Committed and Documented."</p>
+</div>
+
+<!-- 引用 -->
+<div style="margin: 20px 0; font-size: 13px; color: #999; line-height: 1.8">
+<p style="margin: 4px 0"><strong>引用:</strong></p>
+<p style="margin: 4px 0">[1] Feng, J. "Broken by Design: A Static Analysis of Alipay's SecurityGuard SDK." IACR ePrint 2026/526</p>
+<p style="margin: 4px 0">[2] GitHub Evidence Repository: github.com/sgInnora/alipay-securityguard-analysis</p>
+<p style="margin: 4px 0">[3] GB/T 32907-2016 — SM4 Block Cipher Algorithm (中国国家密码管理局)</p>
+<p style="margin: 4px 0">[4] CWE-311: Missing Encryption of Sensitive Data (MITRE)</p>
+<p style="margin: 4px 0">[5] MITRE CVE Submission: Ticket #2010319 (3 CVEs)</p>
+</div>
+
+</section>
+</body>
+</html>

