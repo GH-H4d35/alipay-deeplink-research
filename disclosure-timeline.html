@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Disclosure Timeline — Alipay SecurityGuard Security Research | 披露时间线</title>
+<link rel="alternate" hreflang="zh" href="https://innora.ai/zfb/disclosure-timeline.html" />
+<link rel="alternate" hreflang="en" href="https://innora.ai/zfb/disclosure-timeline.html" />
+<link rel="alternate" hreflang="x-default" href="https://innora.ai/zfb/disclosure-timeline.html" />
+<meta name="description" content="支付宝SecurityGuard SDK安全研究完整披露时间线：从初始发现到监管通报的全过程记录。Alipay SecurityGuard SDK security research disclosure timeline: from initial discovery to regulatory coordination.">
+<meta name="author" content="Innora AI Security Research">
+<meta property="og:title" content="Disclosure Timeline | Alipay SecurityGuard Security Research | 披露时间线">
+<meta property="og:description" content="A factual record of the responsible disclosure process for the Alipay SecurityGuard SDK security research. 支付宝安全研究的负责任披露过程完整记录。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://innora.ai/zfb/disclosure-timeline.html">
+<meta property="og:image" content="https://innora.ai/zfb/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="article:published_time" content="2026-03-25T00:00:00+08:00">
+<meta property="article:modified_time" content="2026-03-25T00:00:00+08:00">
+<meta property="article:author" content="Innora AI Security Research">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Disclosure Timeline | Alipay SecurityGuard Security Research">
+<meta name="twitter:description" content="Factual chronological record of the Alipay SecurityGuard SDK responsible disclosure process. 36 CVEs filed. 9+ regulatory authorities briefed.">
+<meta name="twitter:image" content="https://innora.ai/zfb/og-image.png">
+<meta name="keywords" content="Alipay, SecurityGuard SDK, security research, disclosure timeline, CVE, responsible disclosure, MITRE, IACR, Zenodo, Ant Group, 支付宝, 安全研究, 披露时间线">
+<link rel="canonical" href="https://innora.ai/zfb/disclosure-timeline.html">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#128274;</text></svg>">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #12121a;
+  --border: rgba(255,255,255,0.08);
+  --text: #d0d0e0;
+  --muted: #7878a0;
+  --accent: #4488ff;
+  --accent2: #00d4aa;
+  --accent3: #ff6b6b;
+  --timeline-line: #2a2a3a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-size: 15px;
+  line-height: 1.75;
+  padding-top: 46px;
+}
+
+/* === NAV === */
+.innora-nav-wrap {
+  position: fixed; top: 0; left: 0; width: 100%; z-index: 9999;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+}
+.innora-nav {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 20px; height: 46px;
+  background: rgba(18,18,26,0.92);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.innora-nav a.brand { color: #e0e0e8; text-decoration: none; font-weight: 600; font-size: 0.95rem; }
+.innora-nav-links { display: flex; list-style: none; gap: 12px; flex-wrap: wrap; }
+.innora-nav-links a { color: #9898a8; text-decoration: none; font-size: 0.8rem; transition: color 0.2s; }
+.innora-nav-links a:hover, .innora-nav-links a.active { color: #4488ff; font-weight: bold; }
+.innora-hmb { display: none; flex-direction: column; gap: 4px; background: none; border: none; cursor: pointer; padding: 6px; }
+.innora-hmb i { display: block; width: 22px; height: 2px; background: #9898a8; border-radius: 1px; }
+@media(max-width:700px){
+  .innora-nav-links { display: none; position: absolute; top: 46px; left: 0; width: 100%; flex-direction: column; background: rgba(18,18,26,0.97); padding: 8px 0; gap: 0; }
+  .innora-nav-links.open { display: flex; }
+  .innora-nav-links li { text-align: center; padding: 8px; }
+  .innora-hmb { display: flex; }
+}
+
+/* === LAYOUT === */
+.page-wrapper {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+}
+
+/* === HEADER === */
+.page-header {
+  text-align: center;
+  padding: 40px 0 32px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 40px;
+}
+.page-header .label {
+  display: inline-block;
+  background: rgba(68,136,255,0.12);
+  color: var(--accent);
+  border: 1px solid rgba(68,136,255,0.3);
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.page-header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #e8e8f0;
+  line-height: 1.3;
+  margin-bottom: 10px;
+}
+.page-header .subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.page-header .updated {
+  font-size: 12px;
+  color: #4a4a6a;
+}
+
+/* === AI DISCLOSURE === */
+.ai-notice {
+  background: rgba(68,136,255,0.06);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  padding: 10px 15px;
+  margin-bottom: 28px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.ai-notice strong { color: var(--accent); }
+
+/* === YEAR HEADING === */
+.year-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 40px 0 8px;
+}
+.year-heading .year-badge {
+  background: var(--accent);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 900;
+  padding: 4px 16px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+.year-heading .year-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(68,136,255,0.4), transparent);
+}
+
+/* === TIMELINE === */
+.timeline {
+  position: relative;
+  padding-left: 32px;
+  margin-top: 8px;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent2) 60%, #4a4a6a 100%);
+  border-radius: 1px;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 0;
+  padding-bottom: 28px;
+}
+.timeline-item:last-child {
+  padding-bottom: 0;
+}
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -28px;
+  top: 6px;
+  width: 10px;
+  height: 10px;
+  background: var(--accent);
+  border-radius: 50%;
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.timeline-item.minor::before {
+  width: 8px;
+  height: 8px;
+  top: 7px;
+  left: -27px;
+  background: var(--surface);
+  border-color: var(--accent2);
+  box-shadow: 0 0 0 2px var(--accent2);
+}
+.timeline-item.milestone::before {
+  width: 12px;
+  height: 12px;
+  top: 5px;
+  left: -29px;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(68,136,255,0.3);
+}
+
+.event-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  transition: border-color 0.2s;
+}
+.event-card:hover {
+  border-color: rgba(68,136,255,0.3);
+}
+
+.event-date {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  font-family: "SF Mono", "Fira Code", Consolas, monospace;
+}
+.event-title-zh {
+  font-size: 15px;
+  font-weight: 700;
+  color: #d8d8e8;
+  margin-bottom: 2px;
+  line-height: 1.5;
+}
+.event-title-en {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+.event-detail {
+  font-size: 13px;
+  color: #5a5a7a;
+  line-height: 1.6;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-weight: 600;
+  margin-right: 6px;
+  margin-top: 4px;
+  vertical-align: middle;
+}
+.tag-cve    { background: rgba(255,107,107,0.12); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.3); }
+.tag-pub    { background: rgba(0,212,170,0.10);   color: #00d4aa; border: 1px solid rgba(0,212,170,0.25); }
+.tag-reg    { background: rgba(255,180,0,0.10);   color: #ffb400; border: 1px solid rgba(255,180,0,0.25); }
+.tag-vendor { background: rgba(120,120,160,0.12); color: #9898c8; border: 1px solid rgba(120,120,160,0.3); }
+.tag-arch   { background: rgba(68,136,255,0.12);  color: #4488ff; border: 1px solid rgba(68,136,255,0.3); }
+
+/* === RESOURCES === */
+.resources-section {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+}
+.resources-section h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #d0d0e0;
+  margin-bottom: 20px;
+}
+.resource-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+.resource-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  text-decoration: none;
+  display: block;
+  transition: border-color 0.2s, background 0.2s;
+}
+.resource-card:hover {
+  border-color: rgba(68,136,255,0.4);
+  background: rgba(68,136,255,0.04);
+}
+.resource-card .res-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.resource-card .res-title {
+  font-size: 14px;
+  color: var(--accent);
+  font-weight: 600;
+  word-break: break-all;
+}
+.resource-card .res-desc {
+  font-size: 12px;
+  color: #5a5a7a;
+  margin-top: 4px;
+}
+
+/* === FOOTER BOXES === */
+.footer-box {
+  margin-top: 40px;
+  border-radius: 8px;
+  padding: 18px 20px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.footer-box.nature {
+  background: rgba(0,180,100,0.06);
+  border: 1px solid rgba(0,180,100,0.2);
+}
+.footer-box.nature strong { color: #00b464; }
+.footer-box.author {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  margin-top: 16px;
+}
+.footer-box.author .author-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #d8d8e8;
+  margin-bottom: 4px;
+}
+.footer-box.author .author-meta {
+  font-size: 13px;
+  color: var(--muted);
+}
+.footer-box.author .author-quote {
+  font-size: 12px;
+  color: #4a4a6a;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+/* === BACK TO TOP === */
+#btt {
+  display: none;
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  background: rgba(68,136,255,0.15);
+  border: 1px solid rgba(68,136,255,0.3);
+  color: var(--accent);
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  font-size: 18px;
+  cursor: pointer;
+  text-align: center;
+  line-height: 36px;
+  z-index: 100;
+  transition: background 0.2s;
+}
+#btt:hover { background: rgba(68,136,255,0.25); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<header class="innora-nav-wrap">
+<nav class="innora-nav">
+  <a href="/zfb/" class="brand">Innora Security Research</a>
+  <ul class="innora-nav-links" id="inav">
+    <li><a href="/zfb/">Home 首页</a></li>
+    <li><a href="/zfb/patchproxy-146k.html">PatchProxy</a></li>
+    <li><a href="/zfb/privacy-analysis.html">Privacy 隐私</a></li>
+    <li><a href="/zfb/transport-encryption.html">Encryption 加密</a></li>
+    <li><a href="/zfb/rebuttal.html">Rebuttal 反驳</a></li>
+    <li><a href="/zfb/regulatory-complaint.html">Regulatory 监管</a></li>
+    <li><a href="/zfb/disclosure-timeline.html" class="active">Timeline 时间线</a></li>
+  </ul>
+  <button class="innora-hmb" onclick="document.getElementById('inav').classList.toggle('open')">
+    <i></i><i></i><i></i>
+  </button>
+</nav>
+</header>
+
+<div class="page-wrapper">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="label">Responsible Disclosure | 负责任披露</div>
+    <h1>Disclosure Timeline<br><span style="font-size:20px;font-weight:600;color:#9898b8;">披露时间线</span></h1>
+    <p class="subtitle">A factual chronological record of the Alipay SecurityGuard SDK security research and disclosure process.<br>支付宝 SecurityGuard SDK 安全研究与披露过程的客观时间线记录。</p>
+    <p class="updated">Last updated: 2026-03-25 | Research period: 2024 Q1 – 2026 Q1</p>
+  </div>
+
+  <!-- AI NOTICE -->
+  <div class="ai-notice">
+    <strong>内容标识 / Content Notice:</strong>&nbsp;
+    本页面内容基于可核实的客观事实记录，所有时间节点均有文件或公开记录作为来源。部分文本整理使用了 AI 辅助。
+    This page documents verifiable, objective events only. All timestamps are sourced from contemporaneous records or public archives. Text editing assisted by AI.
+  </div>
+
+  <!-- ===== 2024 ===== -->
+  <div class="year-heading">
+    <div class="year-badge">2024</div>
+    <div class="year-line"></div>
+  </div>
+
+  <div class="timeline">
+
+    <div class="timeline-item milestone">
+      <div class="event-card">
+        <div class="event-date">Q1 – Q2 2024</div>
+        <div class="event-title-zh">启动对 SecurityGuard v2 SDK 的初步分析</div>
+        <div class="event-title-en">Initial discovery and analysis of SecurityGuard v2 SDK</div>
+        <div class="event-detail">
+          通过公开渠道获取的支付宝 APK（Android 版本），对内嵌的 SecurityGuard v2 SDK 进行初步静态分析，识别关键组件与架构模式。<br>
+          Began static analysis of SecurityGuard v2 SDK embedded in publicly available Alipay APK builds. Identified key components and architectural patterns.
+          <span class="tag tag-arch">Analysis</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /timeline 2024 -->
+
+  <!-- ===== 2025 ===== -->
+  <div class="year-heading">
+    <div class="year-badge">2025</div>
+    <div class="year-line"></div>
+  </div>
+
+  <div class="timeline">
+
+    <div class="timeline-item milestone">
+      <div class="event-card">
+        <div class="event-date">Q3 – Q4 2025</div>
+        <div class="event-title-zh">深入分析加密实现、原生代码与隐私机制</div>
+        <div class="event-title-en">Deep analysis of cryptographic implementations, native code, and privacy mechanisms</div>
+        <div class="event-detail">
+          系统性分析 SDK 的密码学实现、热修复机制（PatchProxy / AVMP）、网络通信层及数据收集行为。研究范围扩展至原生 .so 库与 JNI 层。<br>
+          Systematic analysis of cryptographic implementations, hot-patch mechanisms (PatchProxy / AVMP), network communication layers, and data collection behaviors. Scope extended to native .so libraries and JNI layer.
+          <span class="tag tag-arch">Deep Dive</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /timeline 2025 -->
+
+  <!-- ===== 2026 ===== -->
+  <div class="year-heading">
+    <div class="year-badge">2026</div>
+    <div class="year-line"></div>
+  </div>
+
+  <div class="timeline">
+
+    <div class="timeline-item milestone">
+      <div class="event-card">
+        <div class="event-date">Feb 25, 2026</div>
+        <div class="event-title-zh">通过 AntSRC 向厂商提交漏洞报告</div>
+        <div class="event-title-en">Vulnerability report submitted to vendor via AntSRC</div>
+        <div class="event-detail">
+          通过蚂蚁集团官方安全漏洞响应渠道（AntSRC / security@antgroup.com）提交详细技术报告，启动负责任披露流程。<br>
+          Detailed technical report submitted via Ant Group's official security vulnerability response channel (AntSRC / security@antgroup.com), initiating the responsible disclosure process.
+          <span class="tag tag-vendor">Vendor Contact</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="event-card">
+        <div class="event-date">Mar 10, 2026</div>
+        <div class="event-title-zh">厂商回复：认定为"正常功能"</div>
+        <div class="event-title-en">Vendor responds: classified as "normal function"</div>
+        <div class="event-detail">
+          蚂蚁集团通过 AntSRC 渠道回复，将报告中涉及的技术行为定性为"正常功能"，未提出修复计划。<br>
+          Ant Group replied via AntSRC, classifying the reported technical behaviors as "normal function" with no remediation plan indicated.
+          <span class="tag tag-vendor">Vendor Response</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-item milestone">
+      <div class="event-card">
+        <div class="event-date">Mar 12, 2026</div>
+        <div class="event-title-zh">向 MITRE 提交首批 CVE 报告（Ticket #2005801，9 份 CVE）</div>
+        <div class="event-title-en">First MITRE CVE submission — Ticket #2005801, 9 CVE reports</div>
+        <div class="event-detail">
+          鉴于厂商回复不认可，依据 MITRE CVE 提交流程，正式向 MITRE 提交首批 CVE 报告，覆盖密码学、热修复与隐私等多个技术领域。<br>
+          Following the vendor's non-acknowledgment, formally submitted the first batch of CVE reports to MITRE covering cryptography, hot-patch, and privacy domains.
+          <span class="tag tag-cve">CVE Submission</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="event-card">
+        <div class="event-date">Mar 12 – Mar 22, 2026</div>
+        <div class="event-title-zh">8 篇技术分析文章在微信公众号发布</div>
+        <div class="event-title-en">8 technical analysis articles published on WeChat Official Account</div>
+        <div class="event-detail">
+          以中文撰写并发布 8 篇系列技术分析文章（"The Nora Chronicles"），涵盖 PatchProxy 机制、加密降级、隐私分析、DeepLink 攻击面等专题。<br>
+          Published 8 technical analysis articles in Chinese ("The Nora Chronicles") covering PatchProxy, encryption downgrade, privacy analysis, DeepLink attack surface, and related topics.
+          <span class="tag tag-pub">Published</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-item milestone">
+      <div class="event-card">
+        <div class="event-date">Mar 17, 2026</div>
+        <div class="event-title-zh">GitHub 代码库公开发布</div>
+        <div class="event-title-en">GitHub repository published</div>
+        <div class="event-detail">
+          正式公开 GitHub 证据仓库，包含技术报告、反编译代码片段（jadx）、脚本及 Docker 验证环境说明。<br>
+          Publicly released GitHub evidence repository containing technical reports, decompiled code excerpts (jadx), scripts, and Docker verification environment documentation.
+          <span class="tag tag-pub">Published</span>
+          <span class="tag tag-arch">github.com/sgInnora/alipay-securityguard-analysis</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-item milestone">
+      <div class="event-card">
+        <div class="event-date">Mar 19, 2026</div>
+        <div class="event-title-zh">IACR ePrint 论文发布（编号 2026/526）</div>
+        <div class="event-title-en">IACR ePrint paper published — 2026/526</div>
+        <div class="event-detail">
+          在国际密码学研究协会（IACR）ePrint 服务器发布预印本研究论文，题目："Broken by Design: A Static Analysis of Alipay's SecurityGuard SDK"。注：ePrint 为预印本服务，不属于同行评审出版物。<br>
+          Published preprint research paper on the IACR ePrint server: "Broken by Design: A Static Analysis of Alipay's SecurityGuard SDK." Note: ePrint is a preprint service, not a peer-reviewed publication.
+          <span class="tag tag-pub">Academic Record</span>
+          <span class="tag tag-arch">eprint.iacr.org/2026/526</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="event-card">
+        <div class="event-date">Mar 19, 2026</div>
+        <div class="event-title-zh">Packet Storm Security 收录（编号 #217089）</div>
+        <div class="event-title-en">Packet Storm Security publication — #217089</div>
+        <div class="event-detail">
+          安全漏洞信息聚合平台 Packet Storm Security 收录本研究，进一步扩大技术社区的可见度。<br>
+          Research indexed by Packet Storm Security, a widely referenced security advisory aggregation platform.
+          <span class="tag tag-pub">Published</span>
+          <span class="tag tag-arch">packetstormsecurity.com/files/217089</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-item milestone">
+      <div class="event-card">
+        <div class="event-date">Mar 19 – Mar 23, 2026</div>
+        <div class="event-title-zh">后续 MITRE CVE 提交（Batch 1–4，累计 36 份 CVE，11 个工单）</div>
+        <div class="event-title-en">Additional MITRE submissions — Batches 1–4, total 36 CVE reports across 11 tickets</div>
+        <div class="event-detail">
+          在初始提交基础上，分四批次陆续向 MITRE 提交补充 CVE 报告，覆盖认证机制、JSBridge 授权、Wi-Fi 追踪、弱随机数等新发现领域。<br>
+          Submitted four additional batches of CVE reports to MITRE covering authentication mechanisms, JSBridge authorization, Wi-Fi tracking, weak random number generation, and other newly documented areas.
+          <span class="tag tag-cve">36 CVE Reports</span>
+          <span class="tag tag-cve">11 Tickets</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="event-card">
+        <div class="event-date">Mar 22, 2026</div>
+        <div class="event-title-zh">8 篇微信文章因厂商投诉被移除</div>
+        <div class="event-title-en">8 WeChat articles removed following vendor complaint</div>
+        <div class="event-detail">
+          微信平台依据蚂蚁集团经代理律师事务所提出的投诉，将前期发布的 8 篇技术分析文章下架。各文章已同步存档于 innora.ai/zfb/ 永久保存。<br>
+          WeChat platform removed the 8 previously published technical analysis articles following a complaint filed by Ant Group through a proxy law firm. All articles are permanently archived at innora.ai/zfb/.
+          <span class="tag tag-vendor">Platform Removal</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="event-card">
+        <div class="event-date">Mar 22, 2026</div>
+        <div class="event-title-zh">创建 Mastodon 账号（infosec.exchange/@Innora）</div>
+        <div class="event-title-en">Mastodon account created — infosec.exchange/@Innora</div>
+        <div class="event-detail">
+          在去中心化社交平台 Mastodon 的 infosec.exchange 实例创建账号，建立独立于平台审查的技术社区沟通渠道。<br>
+          Created account on infosec.exchange Mastodon instance to establish a communication channel independent of centralized platform moderation.
+          <span class="tag tag-arch">Platform</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-item milestone">
+      <div class="event-card">
+        <div class="event-date">Mar 23, 2026</div>
+        <div class="event-title-zh">Zenodo 永久学术存档（DOI: 10.5281/zenodo.19186848）</div>
+        <div class="event-title-en">Zenodo permanent academic archive — DOI: 10.5281/zenodo.19186848</div>
+        <div class="event-detail">
+          在欧洲核子研究中心（CERN）运营的 Zenodo 平台完成研究材料的永久学术存档，获得不可删除的 DOI，确保数字内容长期可访问性。<br>
+          Completed permanent academic archival of research materials on Zenodo (operated by CERN), obtaining a non-revocable DOI ensuring long-term digital accessibility.
+          <span class="tag tag-pub">Permanent Archive</span>
+          <span class="tag tag-arch">doi.org/10.5281/zenodo.19186848</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-item milestone">
+      <div class="event-card">
+        <div class="event-date">Mar 23, 2026</div>
+        <div class="event-title-zh">Docker 验证环境发布（37/37 测试通过）</div>
+        <div class="event-title-en">Docker verification environment published — 37/37 tests pass</div>
+        <div class="event-detail">
+          发布完整的 Docker 化验证环境，使第三方研究人员可独立复现全部 37 项技术发现，所有测试 100% 通过。验证脚本与 Dockerfile 均已包含在 GitHub 仓库中。<br>
+          Published complete Dockerized verification environment enabling independent third-party reproduction of all 37 technical findings with 100% test pass rate. Verification scripts and Dockerfile included in GitHub repository.
+          <span class="tag tag-pub">Reproducible</span>
+          <span class="tag tag-arch">37 / 37 Tests Pass</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="event-card">
+        <div class="event-date">Mar 13 – Mar 25, 2026</div>
+        <div class="event-title-zh">已向 9+ 国家/地区的监管机构通报</div>
+        <div class="event-title-en">Regulatory authorities in 9+ countries/regions briefed</div>
+        <div class="event-detail">
+          依据各机构的管辖范围，向多个国家和地区的监管机构提交技术简报，涵盖金融监管、数据保护、网络安全应急响应等职能类型。<br>
+          Technical briefings submitted to regulatory authorities across multiple jurisdictions based on their respective mandates, covering financial regulation, data protection, and cybersecurity incident response functions.
+          <span class="tag tag-reg">Regulatory</span>
+          <span class="tag tag-reg">9+ Jurisdictions</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /timeline 2026 -->
+
+  <!-- ===== RESOURCES ===== -->
+  <div class="resources-section">
+    <h2>关键资源 / Key Resources</h2>
+    <div class="resource-grid">
+
+      <a href="https://github.com/sgInnora/alipay-securityguard-analysis" class="resource-card" target="_blank" rel="noopener">
+        <div class="res-label">GitHub Repository</div>
+        <div class="res-title">github.com/sgInnora/<br>alipay-securityguard-analysis</div>
+        <div class="res-desc">Technical evidence, scripts, Docker environment | 技术证据、脚本、Docker环境</div>
+      </a>
+
+      <a href="https://eprint.iacr.org/2026/526" class="resource-card" target="_blank" rel="noopener">
+        <div class="res-label">IACR ePrint (Preprint)</div>
+        <div class="res-title">eprint.iacr.org/2026/526</div>
+        <div class="res-desc">Research preprint — not peer reviewed | 预印本论文（非同行评审）</div>
+      </a>
+
+      <a href="https://doi.org/10.5281/zenodo.19186848" class="resource-card" target="_blank" rel="noopener">
+        <div class="res-label">Zenodo Permanent Archive</div>
+        <div class="res-title">doi.org/10.5281/<br>zenodo.19186848</div>
+        <div class="res-desc">Permanent DOI — CERN/Zenodo | 不可撤销的学术存档</div>
+      </a>
+
+      <a href="https://packetstormsecurity.com/files/217089" class="resource-card" target="_blank" rel="noopener">
+        <div class="res-label">Packet Storm Security</div>
+        <div class="res-title">packetstormsecurity.com/<br>files/217089</div>
+        <div class="res-desc">Security advisory index entry | 安全公告索引</div>
+      </a>
+
+      <a href="https://innora.ai/zfb/" class="resource-card" target="_blank" rel="noopener">
+        <div class="res-label">Research Blog</div>
+        <div class="res-title">innora.ai/zfb/</div>
+        <div class="res-desc">Technical analysis articles archive | 技术分析文章存档</div>
+      </a>
+
+      <a href="https://infosec.exchange/@Innora" class="resource-card" target="_blank" rel="noopener">
+        <div class="res-label">Mastodon</div>
+        <div class="res-title">infosec.exchange/@Innora</div>
+        <div class="res-desc">Research updates and announcements | 研究动态与公告</div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- ===== FOOTER BOXES ===== -->
+  <div class="footer-box nature">
+    <p style="margin-bottom:8px"><strong>研究性质声明 / Research Nature Statement</strong></p>
+    <p style="color:#a0a0c0;font-size:13px;line-height:1.7;margin-bottom:8px">
+      本研究基于公开渠道获取的 Android APK 文件（支付宝 v10.8.30.8000）进行静态反编译分析（jadx），未侵入任何受保护计算机系统。所有技术结论可通过对同版本 APK 执行相同分析流程独立验证。
+    </p>
+    <p style="color:#a0a0c0;font-size:13px;line-height:1.7;margin-bottom:8px">
+      This research is based on static decompilation analysis (jadx) of publicly available Android APK files (Alipay v10.8.30.8000). No protected computer systems were accessed. All technical findings are independently reproducible by applying the same analysis methodology to the same APK version.
+    </p>
+    <p style="color:#a0a0c0;font-size:13px;line-height:1.7;margin-bottom:8px">
+      <strong style="color:#00b464">AI 辅助标识 / AI Assistance:</strong> 本页面使用 Claude 辅助文本整理，时间线事实记录由人工核实。<br>
+      This page used Claude for text editing assistance. Timeline facts were manually verified.
+    </p>
+    <p style="color:#a0a0c0;font-size:13px">
+      <strong style="color:#00b464">许可协议 / License:</strong> CC BY-NC-SA 4.0 &nbsp;|&nbsp;
+      <strong style="color:#00b464">联系 / Contact:</strong> security@innora.ai
+    </p>
+  </div>
+
+  <div class="footer-box author">
+    <div class="author-name">Feng Ning (风宁)</div>
+    <div class="author-meta">Innora.ai &nbsp;·&nbsp; CISSP &nbsp;·&nbsp; Penang, Malaysia</div>
+    <div class="author-quote">"No Code is Done until it is Committed and Documented."</div>
+  </div>
+
+</div><!-- /page-wrapper -->
+
+<button id="btt" title="Back to top">&#8593;</button>
+
+<script>
+(function(){
+  var p = location.pathname;
+  document.querySelectorAll('.innora-nav-links a').forEach(function(a){
+    var href = a.getAttribute('href') || '';
+    if(p.endsWith(href.replace('/zfb/','')) || ((p.endsWith('/zfb/') || p.endsWith('/zfb')) && href === '/zfb/')){
+      a.style.color = '#4488ff';
+      a.style.fontWeight = 'bold';
+    }
+  });
+  var b = document.getElementById('btt');
+  if(b){
+    window.addEventListener('scroll', function(){
+      b.style.display = window.scrollY > 400 ? 'block' : 'none';
+    });
+    b.addEventListener('click', function(){ window.scrollTo({top:0, behavior:'smooth'}); });
+  }
+})();
+</script>
+
+</body>
+</html>
